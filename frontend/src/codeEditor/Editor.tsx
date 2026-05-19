@@ -17,8 +17,8 @@ import {
 } from "./editorConfigs";
 import PeerBar from "./PeerBar";
 import {delay} from "../utils";
-import Input from "../components/Input";
 import Button from "../components/Button";
+import ResettingForm from "../components/ResettingForm";
 import {useShowToast} from "../stores/toastStore";
 import {useCurrentUser} from "../stores/userStore";
 
@@ -59,7 +59,6 @@ export default function Editor({connection, myOwnerId, initialMembers, onRepickF
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [retryCount, setRetryCount] = useState(0);
-	const [newFileName, setNewFileName] = useState("");
 	const [fileName, setFileName] = useState("");
 	const [langSelected, setLangSelected] = useState<string | null>(null);
 	const [prevEditorKey, setPrevEditorKey] = useState<number | "solo">("solo");
@@ -85,7 +84,6 @@ export default function Editor({connection, myOwnerId, initialMembers, onRepickF
 					const name = await pullFileName(connection);
 					if (!done) {
 						setFileName(name);
-						setNewFileName(name);
 					}
 				} catch {
 					if (!done) await delay(1000);
@@ -173,7 +171,6 @@ export default function Editor({connection, myOwnerId, initialMembers, onRepickF
 				const {doc, version, fileName: initialFileName} = await getInitialDocumentWithRetry();
 				if (hasUnmounted) return;
 				setFileName(initialFileName);
-				setNewFileName(initialFileName);
 				setLangSelected(getLangOption(initialFileName));
 
 				const state = EditorState.create({
@@ -246,12 +243,11 @@ export default function Editor({connection, myOwnerId, initialMembers, onRepickF
 		return () => cm.off("vim-mode-change", handleModeChange);
 	}, [vimBindings, isLoading]);
 
-	async function handleRename(): Promise<void> {
+	async function handleRename(name: string): Promise<void> {
 		if (!connection) return;
 		try {
-			const response = await pushFileName(connection, newFileName);
+			const response = await pushFileName(connection, name);
 			setFileName(response.name);
-			setNewFileName(response.name);
 		} catch (err) {
 			showToast("error", errorMessage(err));
 		}
@@ -266,30 +262,8 @@ export default function Editor({connection, myOwnerId, initialMembers, onRepickF
 				onSelect={setSelectedPeerId}
 			/>
 			<div className="flex items-center justify-between p-1">
-				<form
-					className="flex gap-1"
-					onSubmit={(e) => {
-						e.preventDefault();
-						void handleRename();
-					}}
-				>
-					<label>
-						Filename
-						<Input type="text" value={newFileName} onChange={(e) => setNewFileName(e.target.value)} />
-					</label>
-					<Button disabled={newFileName === fileName ? true : undefined} type="submit">
-						Rename
-					</Button>
-				</form>
+				<ResettingForm initialValue={fileName} onSubmit={handleRename} inputLabel="Filename" buttonLabel="Rename" />
 				<div className="flex items-center">
-					<Button
-						type="button"
-						className={vimBindings ? "border" : "border border-transparent"}
-						onClick={handleVimToggle}
-						title="Toggle Vim mode (Ctrl+Alt+v)"
-					>
-						Vim
-					</Button>
 					<label className="text-sm">
 						Syntax Highlighting
 						<select
@@ -307,7 +281,15 @@ export default function Editor({connection, myOwnerId, initialMembers, onRepickF
 							))}
 						</select>
 					</label>
-					<Button type="button" onClick={onRepickFile}>
+					<Button
+						type="button"
+						className={vimBindings ? "border" : "border border-transparent"}
+						onClick={handleVimToggle}
+						title="Toggle Vim mode (Ctrl+Alt+v)"
+					>
+						Vim Mode
+					</Button>
+					<Button type="button" onClick={onRepickFile} className="border border-transparent">
 						Change File
 					</Button>
 				</div>
@@ -322,7 +304,7 @@ export default function Editor({connection, myOwnerId, initialMembers, onRepickF
 			) : isLoading ? (
 				<div className="p-2">Initializing collaborative editor...</div>
 			) : null}
-			<div ref={editorDomRef} className="h-full w-full" />
+			<div ref={editorDomRef} className="h-full w-full bg-editor-bg text-white" />
 			<p className="m-0 text-sm text-(--text-secondary)">{TAB_USAGE_HINT}</p>
 
 			<span role="status" className="sr-only">
@@ -330,7 +312,7 @@ export default function Editor({connection, myOwnerId, initialMembers, onRepickF
 			</span>
 			{vimBindings && vimMode && (
 				<>
-					<div className="fixed bottom-0 left-0 right-0 z-10 flex items-center px-2 py-0.5 bg-surface text-sm">
+					<div className="fixed bottom-0 left-0 right-0 z-10 flex items-center px-2 py-0.5 text-foreground-light bg-surface text-sm">
 						<span aria-hidden className="font-mono font-bold uppercase">
 							{vimMode.mode}
 							{vimMode.subMode ? ` ${vimMode.subMode}` : ""}

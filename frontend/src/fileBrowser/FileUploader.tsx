@@ -105,7 +105,7 @@ function FileUploader({pushToFileList, refreshFileList}: FileUploaderProps) {
 
 	return (
 		<>
-			<div className="input-group">
+			<div className="input-group flex mx-auto">
 				<Input
 					ref={fileInputRef}
 					style={{display: "none"}}
