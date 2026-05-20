@@ -211,6 +211,26 @@ export function getEditorExtensions({
 				// Hide mergeControl buttons on chunks that only have additions by self
 				"& .cm-deletedChunk:not(:has(.cm-deletedLine)) .cm-chunkButtons": {display: "none"},
 
+				// Sticky-pin the Accept button to the viewport's right edge during horizontal
+				// scroll; negative block-end margin keeps it from taking its own row.
+				"& .cm-deletedChunk .cm-chunkButtons": {
+					position: "sticky",
+					insetInlineStart: "auto",
+					insetInlineEnd: "0.3rem",
+					insetBlockStart: "0",
+					width: "fit-content",
+					marginInlineStart: "auto",
+					marginBlockEnd: "-1.6em",
+					zIndex: "1",
+				},
+				"& .cm-deletedChunk .cm-chunkButtons button": {
+					backgroundColor: "var(--color-surface)",
+					color: "var(--color-foreground-light)",
+					borderRadius: "0.2rem",
+					padding: "0 0.4rem",
+					cursor: "pointer",
+				},
+
 				// Add borders and rounded corners for chunks that have deletions,
 				// making it distinguish what Accept actions would affect
 				"& .cm-deletedChunk:has(.cm-deletedLine):has(+ .cm-line.cm-changedLine)": {
@@ -236,6 +256,8 @@ export function getEditorExtensions({
 				},
 				"& .cm-deletedLine": {
 					backgroundColor: "var(--color-diff-add)",
+					// Reserve space so the sticky Accept button doesn't overlap text.
+					paddingInlineEnd: "5rem",
 				},
 				"& .cm-deletedLine del:has(:not(.cm-deletedText)) .cm-deletedText": {
 					textDecoration: "none",
@@ -260,8 +282,9 @@ export function getEditorExtensions({
 					backgroundColor: "var(--color-diff-del-word)",
 				},
 
-				// Styles the line gutter and diff indicators
-				"& .cm-gutters": {backgroundColor: "transparent", color: "var(--color-foreground)"},
+				// Styles the line gutter and diff indicators,
+				// solid background so horizontally scrolled text doesn't show through.
+				"& .cm-gutters": {backgroundColor: "var(--color-canvas)", color: "var(--color-foreground)"},
 				"& .cm-changeGutter": {paddingLeft: "unset"},
 				"& .cm-changedLineGutter, &.cm-merge-b .cm-changedLineGutter": {
 					backgroundColor: "var(--color-error-accent)",
