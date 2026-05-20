@@ -10,9 +10,11 @@ import sessionConfig from "./sessionConfig.js";
 import {timestampedLog} from "./logging.js";
 import Endpoints from "./endpoints/files.js";
 import UserEndpoints from "./endpoints/users.js";
+import UserApiEndpoints from "./endpoints/apiKey.js";
 import SessionEndpoints from "./endpoints/sessions.js";
 import OAuthEndpoints from "./endpoints/oauth.js";
 import workspaceEndpoints from "./endpoints/workspace.js";
+import avatarEndpoints from "./endpoints/avatars.js";
 import "./passportConfig.js";
 
 import {initCollabSocket} from "./endpoints/collabSocket.js";
@@ -38,8 +40,9 @@ UserEndpoints.signupUser(app);
 UserEndpoints.modifyUser(app);
 UserEndpoints.deleteUser(app);
 UserEndpoints.getUser(app);
-UserEndpoints.getUserApiKey(app);
-UserEndpoints.updateUserApiKey(app);
+UserApiEndpoints.getUserApiKey(app);
+UserApiEndpoints.updateUserApiKey(app);
+UserApiEndpoints.deleteUserApiKey(app);
 SessionEndpoints.loginUser(app);
 SessionEndpoints.logoutUser(app);
 SessionEndpoints.getSession(app);
@@ -51,6 +54,9 @@ OAuthEndpoints.githubUnlink(app);
 workspaceEndpoints.createWorkspace(app, collabApi);
 workspaceEndpoints.getWorkspace(app, collabApi);
 
+avatarEndpoints.updateUserAvatar(app);
+avatarEndpoints.deleteUserAvatar(app);
+avatarEndpoints.getUserAvatar(app);
 // Catch-all to serve the frontend, needed for subroutes.
 app.get("/*splat", function (_, response) {
 	response.sendFile(path.join(process.cwd(), "/../frontend/dist/index.html"));

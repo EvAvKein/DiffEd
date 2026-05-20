@@ -1,9 +1,11 @@
-import {useState, useEffect} from "react";
+import {useState, useEffect, useRef} from "react";
 import {useNavigate} from "react-router";
 import Footer from "#/src/layout/Footer";
 import {z} from "zod";
 import Button from "#/src/components/Button";
 import Input from "#/src/components/Input";
+import AcceptCancelDialog from "#/src/components/AcceptCancelDialog";
+import PasswordConfirmDialog from "#/src/components/PasswordConfirmDialog";
 import {useShowToast} from "#/src/stores/toastStore";
 import {useCurrentUser, useSetUser, useUpdateUser} from "#/src/stores/userStore";
 import {apiFetch} from "#/src/utils.js";
@@ -124,7 +126,7 @@ function UserSettings({user, onUpdate}: UserSettingProps) {
 			<div>
 				{passwordConfirm ? (
 					<div>
-						<Confirm
+						<PasswordConfirmDialog
 							onConfirm={handleConfirmClick}
 							onCancel={() => {
 								setPasswordConfirm(false);
@@ -210,7 +212,7 @@ function Password() {
 					<div>
 						{passwordConfirm ? (
 							<div>
-								<Confirm
+								<PasswordConfirmDialog
 									onConfirm={handleConfirmClick}
 									onCancel={() => {
 										setPasswordConfirm(false);
@@ -350,65 +352,14 @@ function Delete() {
 	) : (
 		<div>
 			<h2>You are deleting your account!</h2>
-			<Confirm onConfirm={deleteAccount} onCancel={() => setPasswordConfirm(false)} />
+			<PasswordConfirmDialog onConfirm={deleteAccount} onCancel={() => setPasswordConfirm(false)} />
 		</div>
-	);
-}
-
-type PasswordConfirmProps = {
-	onConfirm: (password: string) => void;
-	onCancel: () => void;
-};
-
-function Confirm({onConfirm, onCancel}: PasswordConfirmProps) {
-	const [password, setPassword] = useState("");
-	const [isLoading, setIsLoading] = useState(false);
-	const showToast = useShowToast();
-
-	async function handleSubmitClick() {
-		setIsLoading(true);
-		try {
-			if (!password) {
-				throw new Error("Please fill the password!");
-			}
-
-			onConfirm(password);
-		} catch (e) {
-			showToast("error", e instanceof Error ? e.message : String(e));
-		} finally {
-			setIsLoading(false);
-		}
-	}
-
-	return (
-		<>
-			<div>
-				<Input
-					placeholder="Enter password"
-					type="password"
-					value={password}
-					onChange={(e) => setPassword(e.target.value)}
-				/>
-				<Button onClick={handleSubmitClick} disabled={isLoading} aria-label="Accept profile updates">
-					Confirm
-				</Button>
-			</div>
-			<div>
-				Please enter password to accept the changes or&nbsp;
-				<button
-					onClick={onCancel}
-					className="hover:text-accent font-bold underline cursor-pointer"
-					aria-label="Cancel profile updates"
-				>
-					cancel
-				</button>
-			</div>
-		</>
 	);
 }
 
 function ApiKey({hasApiKey}: {hasApiKey: boolean}) {
 	const [isLoading, setIsLoading] = useState(false);
+	const [showDeleteConfirm, setAcceptDelete] = useState(false);
 	const updateUser = useUpdateUser();
 	const showToast = useShowToast();
 
@@ -449,8 +400,7 @@ function ApiKey({hasApiKey}: {hasApiKey: boolean}) {
 				throw new Error(response.error);
 			}
 
-			const key = response.data;
-			await navigator.clipboard.writeText(key);
+			await navigator.clipboard.writeText(response.data);
 			showToast("success", "Api key copied to clipboard");
 		} catch (e) {
 			showToast("error", e instanceof Error ? e.message : String(e));
@@ -464,7 +414,7 @@ function ApiKey({hasApiKey}: {hasApiKey: boolean}) {
 			setIsLoading(true);
 
 			const response: ApiResponse<null> = await apiFetch("/api/user/api-key", {
-				method: "PATCH",
+				method: "DELETE",
 				headers: {"Content-Type": "application/json"},
 				credentials: "include",
 				body: JSON.stringify({hash: null}),
@@ -474,6 +424,7 @@ function ApiKey({hasApiKey}: {hasApiKey: boolean}) {
 				throw new Error(response.error);
 			}
 
+			setAcceptDelete(false);
 			updateUser({has_apikey: false});
 			showToast("success", "Successfully deleted Api key");
 		} catch (e) {
@@ -489,17 +440,121 @@ function ApiKey({hasApiKey}: {hasApiKey: boolean}) {
 				<Button onClick={createNewApiKey} disabled={isLoading} aria-label="Create new Api key">
 					Create new Api key
 				</Button>
-				{hasApiKey ? (
-					<>
-						<Button onClick={copyApiKey} disabled={isLoading} aria-label="Get current Api key">
-							Copy current Api key
-						</Button>
-						<Button onClick={deleteApiKey} disabled={isLoading} aria-label="Delete Api key">
+				{hasApiKey && (
+					<Button onClick={copyApiKey} disabled={isLoading} aria-label="Get current Api key">
+						Copy current Api key
+					</Button>
+				)}
+			</div>
+			{hasApiKey && (
+				<div>
+					{showDeleteConfirm ? (
+						<AcceptCancelDialog
+							textToShow="Are you sure you want to delete the current key?"
+							onAccept={deleteApiKey}
+							onCancel={() => setAcceptDelete(false)}
+						/>
+					) : (
+						<Button onClick={() => setAcceptDelete(true)} disabled={isLoading} aria-label="Delete Api key">
 							Delete Api key
 						</Button>
-					</>
-				) : null}
+					)}
+				</div>
+			)}
+		</>
+	);
+}
+
+function Avatar({hasAvatar}: {hasAvatar: boolean}) {
+	const [avatarURL, setAvatarURL] = useState(`/api/user/avatar?t=${Date.now()}`);
+	const [isLoading, setIsLoading] = useState(false);
+	const [acceptDelete, setAcceptDelete] = useState(false);
+	const updateUser = useUpdateUser();
+	const showToast = useShowToast();
+	const fileInputRef = useRef<HTMLInputElement>(null);
+
+	async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+		const file = e.target.files?.[0];
+		if (!file) return;
+
+		const formData = new FormData();
+		formData.append("avatar", file);
+
+		try {
+			setIsLoading(true);
+
+			const response: ApiResponse<null> = await apiFetch("/api/user/avatar", {
+				method: "PATCH",
+				credentials: "include",
+				body: formData,
+			});
+
+			if (!response.ok) {
+				throw new Error(response.error);
+			}
+
+			setAvatarURL(`/api/user/avatar?t=${Date.now()}`);
+
+			updateUser({has_avatar: true});
+			showToast("success", "Successfully uploaded the avatar");
+
+			// Reset fileInputRef removes file selection from browser cache
+			if (fileInputRef.current) {
+				fileInputRef.current.value = "";
+			}
+		} catch (e) {
+			showToast("error", e instanceof Error ? e.message : String(e));
+		} finally {
+			setIsLoading(false);
+		}
+	}
+
+	async function handleDelete() {
+		try {
+			setIsLoading(true);
+
+			const response: ApiResponse<null> = await apiFetch("api/user/avatar", {method: "DELETE", credentials: "include"});
+
+			if (!response.ok) {
+				throw new Error(response.error);
+			}
+
+			setAvatarURL(`/api/user/avatar?t=${Date.now()}`);
+			setAcceptDelete(false);
+
+			updateUser({has_avatar: false});
+			showToast("success", "Successfully deleted the avatar");
+		} catch (e: unknown) {
+			showToast("error", e instanceof Error ? e.message : String(e));
+		} finally {
+			setIsLoading(false);
+		}
+	}
+
+	return (
+		<>
+			<div className="w-32 h-32 rounded-full overflow-hidden">
+				<img src={avatarURL} alt="avatar" className="w-full h-full object-cover" />
 			</div>
+			<input type="file" accept="image/*" onChange={handleUpload} ref={fileInputRef} style={{display: "none"}} />
+			<Button disabled={isLoading} onClick={() => fileInputRef.current?.click()}>
+				Upload avatar
+			</Button>
+			<span>max. 1 MB (.png .webp .jpg .jpeg)</span>
+
+			{hasAvatar && !acceptDelete ? (
+				<div>
+					<Button disabled={isLoading} onClick={() => setAcceptDelete(true)}>
+						Delete avatar
+					</Button>
+				</div>
+			) : hasAvatar ? (
+				<AcceptCancelDialog
+					textToShow="Are you sure you want to delete the avatar?"
+					onAccept={handleDelete}
+					onCancel={() => setAcceptDelete(false)}
+				/>
+			) : null}
 		</>
 	);
 }
@@ -548,6 +603,9 @@ export default function UserManagementPage() {
 			<div>
 				DANGER ZONE!!!
 				<Delete />
+			</div>
+			<div>
+				<Avatar hasAvatar={!!currentUser.has_avatar} />
 			</div>
 			<div className="mt-12">
 				<Footer />

@@ -13,6 +13,7 @@ export type User = {
 	email: string;
 	github_linked?: boolean;
 	has_apikey?: boolean;
+	has_avatar?: boolean;
 	vim_bindings: boolean;
 };
 

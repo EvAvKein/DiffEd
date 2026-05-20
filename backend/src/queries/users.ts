@@ -4,7 +4,7 @@ import {timestampedLog} from "#/src/logging.js";
 
 async function getUserById(id: number): Promise<User | null> {
 	const query =
-		"SELECT id, username, email, vim_bindings, (github_id IS NOT NULL) AS github_linked, (apikey IS NOT NULL) AS has_apikey FROM users WHERE id = $1";
+		"SELECT id, username, email, vim_bindings, (github_id IS NOT NULL) AS github_linked, (apikey IS NOT NULL) AS has_apikey, (avatar_filename IS NOT NULL) AS has_avatar FROM users WHERE id = $1";
 	timestampedLog(`DB QUERY >>> ${query}`);
 	timestampedLog(`DB VALUES >>> ${[id]}`);
 	const {rows} = await db.query(query, [id]);
@@ -101,6 +101,17 @@ async function getApiKeyById(id: number): Promise<string | null> {
 	return rows[0].apikey;
 }
 
+async function getAvatarFilenameById(id: number): Promise<string | null> {
+	const query = "SELECT avatar_filename FROM users WHERE id = $1";
+	timestampedLog(`DB QUERY >>> ${query}`);
+	timestampedLog(`DB VALUES >>> ${[id]}`);
+	const {rows} = await db.query(query, [id]);
+
+	if (!rows.length) return null;
+
+	return rows[0].avatar_filename;
+}
+
 async function createOAuthUser(username: string, email: string, githubId: string): Promise<number> {
 	const query = "INSERT INTO users (username, email, github_id) VALUES ($1, $2, $3) RETURNING id";
 	const values = [username, email, githubId];
@@ -161,7 +172,7 @@ async function updatePassword(hash: string, id: number): Promise<boolean> {
 	return result.rowCount! > 0;
 }
 
-async function updateApiKey(hash: string, id: number): Promise<string | null> {
+async function updateApiKey(hash: string | null, id: number): Promise<string | null> {
 	const values = [hash, id];
 	const query = "UPDATE users SET apikey = $1 WHERE id = $2";
 	timestampedLog(`DB QUERY >>> ${query}`);
@@ -169,6 +180,16 @@ async function updateApiKey(hash: string, id: number): Promise<string | null> {
 	const result = await db.query(query, values);
 
 	return result.rowCount! > 0 ? hash : null;
+}
+
+async function updateAvatar(filename: string | null, id: number): Promise<boolean> {
+	const values = [filename, id];
+	const query = "UPDATE users SET avatar_filename = $1 WHERE id = $2";
+	timestampedLog(`DB QUERY >>> ${query}`);
+	timestampedLog(`DB VALUES >>> ${values}`);
+	const result = await db.query(query, values);
+
+	return result.rowCount! > 0;
 }
 
 async function unlinkGithubId(userId: number): Promise<boolean> {
@@ -208,6 +229,7 @@ export default {
 	getUserByApiKey,
 	getUserWithPasswordByIdentifier,
 	getApiKeyById,
+	getAvatarFilenameById,
 	createUser,
 	createOAuthUser,
 	linkGithubId,
@@ -216,6 +238,7 @@ export default {
 	updateEmail,
 	updatePassword,
 	updateApiKey,
+	updateAvatar,
 	unlinkGithubId,
 	deleteUserById,
 	updateVimBindings,
