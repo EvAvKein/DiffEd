@@ -83,9 +83,16 @@ function FileList({onFileSelect, fileList, refreshFileList, onSortToggle, descen
 						{file.name.length <= MAX_VIEWABLE_FILENAME_LEN ? file.name : truncateFileName(file.name)}
 					</button>
 					<span className="ml-auto flex items-center">
-						<Button onClick={() => handleDownload(file)}>{" 🡻 "}</Button>
-						<Button onClick={() => handleDelete(file.id)} className="font-bold" danger={true}>
-							{" X "}
+						<Button onClick={() => handleDownload(file)} aria-label={`Download ${file.name}`}>
+							<span aria-hidden="true">{" 🡻 "}</span>
+						</Button>
+						<Button
+							onClick={() => handleDelete(file.id)}
+							className="font-bold"
+							danger={true}
+							aria-label={`Delete ${file.name}`}
+						>
+							<span aria-hidden="true">{" X "}</span>
 						</Button>
 					</span>
 				</span>
@@ -97,11 +104,16 @@ function FileList({onFileSelect, fileList, refreshFileList, onSortToggle, descen
 		<div id="file-list" className="mx-auto w-full max-w-2xl">
 			<span className="m-2">
 				filename
-				<Button className="bg-transparent" onClick={() => onSortToggle()}>
-					{descending ? "▾" : "▴"}
+				<Button className="bg-transparent" onClick={() => onSortToggle()} aria-label="Toggle filename sort direction">
+					<span aria-hidden="true">{descending ? "▾" : "▴"}</span>
 				</Button>
 			</span>
-			<ol>{listItems}</ol>
+			<span role="status" className="sr-only">
+				{descending ? "Sorted descending" : "Sorted ascending"}
+			</span>
+			<ol aria-live="polite" aria-atomic="false">
+				{listItems}
+			</ol>
 		</div>
 	);
 }
