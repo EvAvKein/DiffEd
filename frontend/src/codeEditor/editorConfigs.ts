@@ -310,23 +310,42 @@ export function getEditorExtensions({
 				},
 
 				// Styles the input cursor (normal mode) and vim block cursor
-				"& .cm-cursor, & .cm-cursorAnchor": {borderLeftColor: "var(--color-accent)"},
+				"& .cm-cursor, & .cm-cursorAnchor": {
+					borderLeftColor: "Highlight",
+					borderLeftWidth: "2px",
+				},
 				"& .cm-fat-cursor": {
-					backgroundColor: "color-mix(in srgb, var(--color-accent) 33%, transparent) !important",
+					backgroundColor: "Highlight !important",
+					color: "HighlightText !important",
 					outline: "none !important",
 				},
 
-				"& .cm-searchMatch": {
-					backgroundColor: "color-mix(in srgb, var(--color-accent) 25%, transparent) !important",
+				// Overrides CodeMirror's selection styling,
+				"& .cm-selectionBackground": {
+					// .cm-selectionBackground covers multi-cursor and rectangular selections that native ::selection doesn't
+					backgroundColor: "Highlight !important",
+				},
+				"& .cm-content .cm-line ::selection, & .cm-content .cm-line::selection, & .cm-content ::selection": {
+					// Higher specificity is important for overriding "high priority" default ::selection styling
+					backgroundColor: "Highlight !important",
+					color: "HighlightText !important",
 				},
 
-				"& .cm-selectionMatch": {
-					backgroundColor: "color-mix(in srgb, var(--color-accent) 25%, transparent) !important",
+				"& .cm-vimMode .cm-content .cm-line ::selection, & .cm-vimMode .cm-content .cm-line::selection": {
+					// Higher specificity is important for overriding "high priority" default ::selection styling
+					backgroundColor: "Highlight !important",
+					color: "HighlightText !important",
 				},
-
-				"& .cm-selectionBackground, &.cm-focused .cm-selectionBackground": {
-					backgroundColor: "color-mix(in srgb, var(--color-accent) 25%, transparent) !important",
+				"& .cm-selectionMatch, & .cm-searchMatch, & .cm-matchingBracket": {
+					backgroundColor: "color-mix(in srgb, Highlight 60%, transparent) !important",
 				},
+				"& .cm-searchMatch-selected": {
+					backgroundColor: "color-mix(in srgb, Highlight 80%, transparent) !important",
+				},
+				"& .cm-selectionMatch, & .cm-selectionMatch *, & .cm-searchMatch, & .cm-searchMatch *, & .cm-matchingBracket, & .cm-matchingBracket *":
+					{
+						color: "HighlightText !important",
+					},
 
 				// Styles the vim command-line panel
 				"& .cm-panels": {backgroundColor: "var(--color-surface)", color: "var(--color-foreground-light)"},
