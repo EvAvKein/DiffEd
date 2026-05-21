@@ -6,7 +6,7 @@ import {timestampedLog} from "#/src/logging.js";
 import {isDbError, isUniqueViolation} from "#/src/utils.js";
 import {usernameSchema} from "#/src/validation/schemas.js";
 import type {ApiResponse, User, PendingGithubPayload} from "#shared/src/types.js";
-import {requireAuth} from "#/src/middleware.js";
+import {requireAuthOrApiKey, userIdAfterAuth, type AuthRequest} from "#/src/middleware.js";
 import userQueryService from "#/src/queries/users.js";
 import {Buffer} from "node:buffer";
 
@@ -172,25 +172,29 @@ function setGithubUsername(app: Express) {
 }
 
 function githubUnlink(app: Express) {
-	app.delete("/api/auth/github/link", requireAuth, async (req: Request, res: Response<ApiResponse<null>>) => {
-		timestampedLog(`REQUEST >>> ${req.method} ${req.url}`);
-		const id = req.session.userId!;
-		try {
-			const password = await userQueryService.getHashedPasswordById(id);
-			if (!password) {
-				return res.status(400).json({ok: false, error: "Cannot unlink GitHub: no password set"});
+	app.delete(
+		"/api/auth/github/link",
+		requireAuthOrApiKey,
+		async (req: AuthRequest, res: Response<ApiResponse<null>>) => {
+			timestampedLog(`REQUEST >>> ${req.method} ${req.url}`);
+			const userId = userIdAfterAuth(req);
+			try {
+				const password = await userQueryService.getHashedPasswordById(userId);
+				if (!password) {
+					return res.status(400).json({ok: false, error: "Cannot unlink GitHub: no password set"});
+				}
+				await userQueryService.unlinkGithubId(userId);
+				res.status(200).json({ok: true, data: null});
+			} catch (error: unknown) {
+				if (isDbError(error)) {
+					timestampedLog(`ERROR <<< ${error.code}: ${error.detail}`);
+				} else {
+					timestampedLog(`ERROR <<< ${error}`);
+				}
+				return res.status(500).json({ok: false, error: "Internal server error"});
 			}
-			await userQueryService.unlinkGithubId(id);
-			res.status(200).json({ok: true, data: null});
-		} catch (error: unknown) {
-			if (isDbError(error)) {
-				timestampedLog(`ERROR <<< ${error.code}: ${error.detail}`);
-			} else {
-				timestampedLog(`ERROR <<< ${error}`);
-			}
-			return res.status(500).json({ok: false, error: "Internal server error"});
-		}
-	});
+		},
+	);
 }
 
 function establishSession(req: Request, res: Response, userId: number) {

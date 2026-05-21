@@ -6,7 +6,7 @@ import {SignupSchema, usernameSchema, emailSchema, passwordSchema} from "#/src/v
 import {isDbError, isUniqueViolation} from "#/src/utils.js";
 import type {ApiResponse, User} from "#shared/src/types.js";
 import {timestampedLog} from "#/src/logging.js";
-import {requireAuth} from "#/src/middleware.js";
+import {requireAuthOrApiKey, userIdAfterAuth, type AuthRequest} from "#/src/middleware.js";
 import userQueryService from "#/src/queries/users.js";
 
 function signupUser(app: Express) {
@@ -42,23 +42,30 @@ function signupUser(app: Express) {
 }
 
 function modifyUser(app: Express) {
-	app.patch("/api/user", requireAuth, async (req: Request, res: Response<ApiResponse<null>>) => {
+	app.patch("/api/user", requireAuthOrApiKey, async (req: AuthRequest, res: Response<ApiResponse<null>>) => {
 		timestampedLog(`REQUEST >>> ${req.method} ${req.url}`);
 		const {username, email, password, newPassword, newPassword2, vim_bindings} = req.body;
-		const id = req.session.userId!;
+		const userId = userIdAfterAuth(req);
 
 		if (!username && !email && !newPassword && vim_bindings === undefined) {
 			return res.status(400).json({ok: false, error: "Nothing to update"});
 		}
 
 		try {
-			const user = await userQueryService.getUserWithPasswordById(id);
+			const user = await userQueryService.getUserWithPasswordById(userId);
 			if (!user) {
-				throw new Error(`User with id: ${id} not found in database`);
+				throw new Error(`User with id: ${userId} not found in database`);
 			}
 
-			if (vim_bindings === undefined && !(await argon2.verify(user.hashed_password, password))) {
-				return res.status(400).json({ok: false, error: "Incorrect password"});
+			// GitHub-only accounts have no password to confirm with, so for them an authenticated request is enough.
+			const requiresPassword = Boolean(username || email || newPassword);
+			if (requiresPassword && user.hashed_password) {
+				if (typeof password !== "string" || !password) {
+					return res.status(400).json({ok: false, error: "Current password required"});
+				}
+				if (!(await argon2.verify(user.hashed_password, password))) {
+					return res.status(400).json({ok: false, error: "Incorrect password"});
+				}
 			}
 
 			if (username) {
@@ -76,8 +83,8 @@ function modifyUser(app: Express) {
 					return res.status(409).json({ok: false, error: "Username already taken"});
 				}
 
-				if ((await userQueryService.updateUsername(username, id)) === false)
-					throw new Error(`Could not update username for id: ${id}`);
+				if ((await userQueryService.updateUsername(username, userId)) === false)
+					throw new Error(`Could not update username for id: ${userId}`);
 			}
 
 			if (email) {
@@ -95,8 +102,8 @@ function modifyUser(app: Express) {
 					return res.status(409).json({ok: false, error: "Email already taken"});
 				}
 
-				if ((await userQueryService.updateEmail(email, id)) === false)
-					throw new Error(`Could not update email for id: ${id}`);
+				if ((await userQueryService.updateEmail(email, userId)) === false)
+					throw new Error(`Could not update email for id: ${userId}`);
 			}
 
 			if (newPassword) {
@@ -108,7 +115,7 @@ function modifyUser(app: Express) {
 				if (newPassword !== newPassword2)
 					return res.status(400).json({ok: false, error: "The passwords do not match!"});
 
-				if (await argon2.verify(user.hashed_password, newPassword)) {
+				if (user.hashed_password && (await argon2.verify(user.hashed_password, newPassword))) {
 					return res.status(400).json({ok: false, error: "New Password can not be the same as old password!"});
 				}
 
@@ -116,8 +123,8 @@ function modifyUser(app: Express) {
 					type: argon2.argon2id,
 				});
 
-				if ((await userQueryService.updatePassword(hash, id)) === false)
-					throw new Error(`Could not update password for id :${id}`);
+				if ((await userQueryService.updatePassword(hash, userId)) === false)
+					throw new Error(`Could not update password for id :${userId}`);
 			}
 
 			if (vim_bindings !== undefined) {
@@ -125,8 +132,8 @@ function modifyUser(app: Express) {
 					return res.status(400).json({ok: false, error: "Vim bindings must be a boolean"});
 				}
 
-				if ((await userQueryService.updateVimBindings(vim_bindings, id)) === false)
-					throw new Error(`Could not update vim_bindings for id: ${id}`);
+				if ((await userQueryService.updateVimBindings(vim_bindings, userId)) === false)
+					throw new Error(`Could not update vim_bindings for id: ${userId}`);
 			}
 
 			res.status(200).json({ok: true, data: null});
@@ -142,33 +149,45 @@ function modifyUser(app: Express) {
 }
 
 function deleteUser(app: Express) {
-	app.delete("/api/user", requireAuth, async (req: Request, res: Response<ApiResponse<null>>) => {
+	app.delete("/api/user", requireAuthOrApiKey, async (req: AuthRequest, res: Response<ApiResponse<null>>) => {
 		timestampedLog(`REQUEST >>> ${req.method} ${req.url}`);
 		const {password} = req.body;
-		const id = req.session.userId!;
+		const userId = userIdAfterAuth(req);
 
 		try {
-			const user = await userQueryService.getUserWithPasswordById(id);
+			const user = await userQueryService.getUserWithPasswordById(userId);
 			if (!user) {
-				throw new Error(`User with id: ${id} not found in database`);
+				throw new Error(`User with id: ${userId} not found in database`);
 			}
 
-			if (!(await argon2.verify(user.hashed_password, password))) {
-				return res.status(400).json({ok: false, error: "Incorrect password"});
+			// GitHub-only accounts don't have a password, so an authenticated request is enough.
+			if (user.hashed_password) {
+				if (typeof password !== "string" || !password) {
+					return res.status(400).json({ok: false, error: "Current password required"});
+				}
+				if (!(await argon2.verify(user.hashed_password, password))) {
+					return res.status(400).json({ok: false, error: "Incorrect password"});
+				}
 			}
 
-			const filename = await userQueryService.getAvatarFilenameById(id);
-			if (filename && filename !== "empty.jpg") {
+			const filename = await userQueryService.getAvatarFilenameById(userId);
+			if (filename && filename !== "default.jpg") {
 				const filepath = path.resolve(process.cwd(), "src/private/avatars", filename);
 				if (fs.existsSync(filepath)) {
 					fs.unlinkSync(filepath);
 				}
 			}
-			if ((await userQueryService.deleteUserById(id)) === false) {
-				throw new Error(`Could not delete user with id: ${id}`);
+			if ((await userQueryService.deleteUserById(userId)) === false) {
+				throw new Error(`Could not delete user with id: ${userId}`);
 			}
-			res.clearCookie("connect.sid");
-			res.status(200).json({ok: true, data: null});
+
+			req.session.destroy((sessionError) => {
+				if (sessionError) {
+					timestampedLog(`ERROR <<< failed to destroy session after account deletion: ${sessionError}`);
+				}
+				res.clearCookie("connect.sid");
+				res.status(200).json({ok: true, data: null});
+			});
 		} catch (error: unknown) {
 			if (isDbError(error)) {
 				timestampedLog(`DB ERROR <<< ${error.code}: ${error.detail}`);
@@ -181,12 +200,12 @@ function deleteUser(app: Express) {
 }
 
 function getUser(app: Express) {
-	app.get("/api/user", requireAuth, async (req: Request, res: Response<ApiResponse<User>>) => {
+	app.get("/api/user", requireAuthOrApiKey, async (req: AuthRequest, res: Response<ApiResponse<User>>) => {
 		timestampedLog(`REQUEST >>> ${req.method} ${req.url}`);
 
-		const id = req.session.userId!;
+		const userId = userIdAfterAuth(req);
 		try {
-			const user = await userQueryService.getUserById(id);
+			const user = await userQueryService.getUserById(userId);
 			if (!user) {
 				throw new Error("No query result");
 			}

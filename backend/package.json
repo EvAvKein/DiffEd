@@ -1,7 +1,8 @@
 {
 	"type": "module",
 	"imports": {
-		"#/*": "./dist/backend/*"
+		"#/*": "./dist/backend/*",
+		"#shared/*": "./dist/shared/*"
 	},
 	"scripts": {
 		"jest": "npx jest",

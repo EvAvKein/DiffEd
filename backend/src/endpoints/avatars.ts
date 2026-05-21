@@ -5,7 +5,7 @@ import type {Express, Request, Response, NextFunction} from "express";
 import {isDbError} from "#/src/utils.js";
 import type {ApiResponse} from "#shared/src/types.js";
 import {timestampedLog} from "#/src/logging.js";
-import {requireAuth} from "#/src/middleware.js";
+import {requireAuthOrApiKey, userIdAfterAuth, type AuthRequest} from "#/src/middleware.js";
 import userQueryService from "#/src/queries/users.js";
 
 const MAX_IMGSIZE = 1024 * 1024; // 1 MiB
@@ -16,8 +16,8 @@ const DEFAULT_AVATAR = "default.jpg";
 const storage = multer.diskStorage({
 	destination: `${AVATAR_DIR}`, // as this is string multer will make sure the directory exists
 
-	filename: function (req: Request, file: Express.Multer.File, cb) {
-		const uniqueName = req.session.userId! + "-" + Date.now() + "-" + file.originalname;
+	filename: function (req: AuthRequest, file: Express.Multer.File, cb) {
+		const uniqueName = userIdAfterAuth(req) + "-" + Date.now() + "-" + file.originalname;
 		cb(null, uniqueName);
 	},
 });
@@ -73,46 +73,51 @@ function multerUpload(req: Request, res: Response<ApiResponse<null>>, next: Next
 }
 
 function updateUserAvatar(app: Express) {
-	app.patch("/api/user/avatar", requireAuth, multerUpload, async (req: Request, res: Response<ApiResponse<null>>) => {
-		timestampedLog(`REQUEST >>> ${req.method} ${req.url}`);
+	app.patch(
+		"/api/user/avatar",
+		requireAuthOrApiKey,
+		multerUpload,
+		async (req: AuthRequest, res: Response<ApiResponse<null>>) => {
+			timestampedLog(`REQUEST >>> ${req.method} ${req.url}`);
 
-		const id = req.session.userId!;
-		const filename = req.file!.filename; // Same as with userId there is no case where we wouldn't have file in this row.
-		try {
-			const old_filename = await userQueryService.getAvatarFilenameById(id);
-			if ((await userQueryService.updateAvatar(filename, id)) === false) {
-				throw new Error(`Could not update user avatar with id: ${id}`);
-			}
+			const userId = userIdAfterAuth(req);
+			const filename = req.file!.filename; // Same as with userId there is no case where we wouldn't have file in this row.
+			try {
+				const old_filename = await userQueryService.getAvatarFilenameById(userId);
+				if ((await userQueryService.updateAvatar(filename, userId)) === false) {
+					throw new Error(`Could not update user avatar with id: ${userId}`);
+				}
 
-			if (old_filename && old_filename !== DEFAULT_AVATAR) {
-				deleteAvatar(old_filename);
+				if (old_filename && old_filename !== DEFAULT_AVATAR) {
+					deleteAvatar(old_filename);
+				}
+				res.status(200).json({ok: true, data: null});
+			} catch (error: unknown) {
+				deleteAvatar(filename);
+				if (isDbError(error)) {
+					timestampedLog(`DB ERROR <<< ${error.code}: ${error.detail}`);
+				} else {
+					timestampedLog(`ERROR <<< ${error}`);
+				}
+				return res.status(500).json({ok: false, error: "Internal server error"});
 			}
-			res.status(200).json({ok: true, data: null});
-		} catch (error: unknown) {
-			deleteAvatar(filename);
-			if (isDbError(error)) {
-				timestampedLog(`DB ERROR <<< ${error.code}: ${error.detail}`);
-			} else {
-				timestampedLog(`ERROR <<< ${error}`);
-			}
-			return res.status(500).json({ok: false, error: "Internal server error"});
-		}
-	});
+		},
+	);
 }
 
 function deleteUserAvatar(app: Express) {
-	app.delete("/api/user/avatar", requireAuth, async (req: Request, res: Response<ApiResponse<null>>) => {
+	app.delete("/api/user/avatar", requireAuthOrApiKey, async (req: AuthRequest, res: Response<ApiResponse<null>>) => {
 		timestampedLog(`REQUEST >>> ${req.method} ${req.url}`);
 
-		const id = req.session.userId!;
+		const userId = userIdAfterAuth(req);
 		try {
-			const old_filename = await userQueryService.getAvatarFilenameById(id);
+			const old_filename = await userQueryService.getAvatarFilenameById(userId);
 			if (!old_filename || old_filename === DEFAULT_AVATAR) {
 				return res.status(404).json({ok: false, error: "No file uploaded"});
 			}
 
-			if ((await userQueryService.updateAvatar(null, id)) === false) {
-				throw new Error(`Could not update user avatar with id: ${id}`);
+			if ((await userQueryService.updateAvatar(null, userId)) === false) {
+				throw new Error(`Could not update user avatar with id: ${userId}`);
 			}
 
 			deleteAvatar(old_filename);
@@ -130,13 +135,12 @@ function deleteUserAvatar(app: Express) {
 }
 
 function getUserAvatar(app: Express) {
-	app.get("/api/user/avatar", requireAuth, async (req: Request, res: Response) => {
+	app.get("/api/user/avatar", requireAuthOrApiKey, async (req: AuthRequest, res: Response) => {
 		timestampedLog(`REQUEST >>> ${req.method} ${req.url}`);
 
-		const id = req.session.userId!;
-
+		const userId = userIdAfterAuth(req);
 		try {
-			const filename = await userQueryService.getAvatarFilenameById(id);
+			const filename = await userQueryService.getAvatarFilenameById(userId);
 			let filepath: string;
 			if (!filename || filename === DEFAULT_AVATAR) {
 				filepath = path.join(AVATAR_DIR, DEFAULT_AVATAR);

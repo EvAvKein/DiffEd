@@ -1,27 +1,25 @@
-import type {Express, Request, Response} from "express";
+import type {Express, Response} from "express";
 import {type Pool} from "pg";
 import {timestampedLog} from "#/src/logging.js";
 import {UserFileSchema} from "#/src/validation/schemas.js";
-import {requireAuth} from "#/src/middleware.js";
+import {requireAuthOrApiKey, userIdAfterAuth, type AuthRequest} from "#/src/middleware.js";
 import type {UserFile, ApiResponse} from "#shared/src/types.js";
 import {isDbError, isInvalidByteSequence, isUniqueViolation} from "#/src/utils.js";
-
+import {validateFile} from "#shared/src/fileValidation.js";
 import multer from "multer";
-
-// doing #shared does not work for some reason
-import {validateFile} from "../../../shared/src/fileValidation.js";
 import assert from "node:assert";
 
 function getFiles(app: Express, db: Pool) {
-	app.get("/api/files", requireAuth, async (req: Request, res: Response<ApiResponse<UserFile[]>>) => {
+	app.get("/api/files", requireAuthOrApiKey, async (req: AuthRequest, res: Response<ApiResponse<UserFile[]>>) => {
 		timestampedLog(`REQUEST >>> ${req.method} ${req.url}`);
 
+		const userId = userIdAfterAuth(req);
 		const query = "SELECT * FROM files WHERE owner_id = $1";
 		timestampedLog(`DB QUERY >>> ${query}`);
-		timestampedLog(`DB VALUES >>> ${req.session.userId}`);
+		timestampedLog(`DB VALUES >>> ${userId}`);
 
 		try {
-			const result = await db.query(query, [req.session.userId]);
+			const result = await db.query(query, [userId]);
 			return res.status(200).json({ok: true, data: result.rows});
 		} catch (error: unknown) {
 			if (isDbError(error)) {
@@ -35,7 +33,7 @@ function getFiles(app: Express, db: Pool) {
 }
 
 function getFileById(app: Express, db: Pool) {
-	app.get("/api/files/:fileId", requireAuth, async (req: Request, res: Response<ApiResponse<UserFile>>) => {
+	app.get("/api/files/:fileId", requireAuthOrApiKey, async (req: AuthRequest, res: Response<ApiResponse<UserFile>>) => {
 		timestampedLog(`REQUEST >>> ${req.method} ${req.url}`);
 
 		const fileId = UserFileSchema.shape.id.safeParse(req.params.fileId);
@@ -43,8 +41,9 @@ function getFileById(app: Express, db: Pool) {
 			return res.status(400).json({ok: false, error: "Invalid file id"});
 		}
 
+		const userId = userIdAfterAuth(req);
 		const query = "SELECT * FROM files WHERE id = $1 AND owner_id = $2";
-		const values = [fileId.data, req.session.userId];
+		const values = [fileId.data, userId];
 		timestampedLog(`DB QUERY >>> ${query}`);
 		timestampedLog(`DB VALUES >>> ${values}`);
 
@@ -74,9 +73,9 @@ const upload = multer({
 function uploadFile(app: Express, db: Pool) {
 	app.post(
 		"/api/files",
-		requireAuth,
+		requireAuthOrApiKey,
 		upload.single("file"),
-		async (req: Request, res: Response<ApiResponse<string>>) => {
+		async (req: AuthRequest, res: Response<ApiResponse<string>>) => {
 			timestampedLog(`REQUEST >>> ${req.method} ${req.url}`);
 
 			if (!req.file) {
@@ -91,8 +90,9 @@ function uploadFile(app: Express, db: Pool) {
 				return res.status(415).json({ok: false, error: err});
 			}
 
+			const userId = userIdAfterAuth(req);
 			const query = "INSERT INTO files (id, name, content, owner_id) VALUES ($1, $2, $3, $4) RETURNING id";
-			const values = [crypto.randomUUID(), f.originalname, fileText, req.session.userId];
+			const values = [crypto.randomUUID(), f.originalname, fileText, userId];
 
 			timestampedLog(`DB QUERY >>> ${query}`);
 			timestampedLog(`DB VALUES >>> ${JSON.stringify(values)}`);
@@ -127,7 +127,7 @@ function uploadFile(app: Express, db: Pool) {
 }
 
 function deleteFile(app: Express, db: Pool) {
-	app.delete("/api/files/:fileId", requireAuth, async (req: Request, res: Response<ApiResponse<null>>) => {
+	app.delete("/api/files/:fileId", requireAuthOrApiKey, async (req: AuthRequest, res: Response<ApiResponse<null>>) => {
 		timestampedLog(`REQUEST >>> ${req.method} ${req.url}`);
 
 		const fileId = UserFileSchema.shape.id.safeParse(req.params.fileId);
@@ -135,8 +135,9 @@ function deleteFile(app: Express, db: Pool) {
 			return res.status(400).json({ok: false, error: "Invalid file id"});
 		}
 
+		const userId = userIdAfterAuth(req);
 		const query = "DELETE FROM files WHERE id = $1 AND owner_id = $2";
-		const values = [fileId.data, req.session.userId];
+		const values = [fileId.data, userId];
 		timestampedLog(`DB QUERY >>> ${query}`);
 		timestampedLog(`DB VALUES >>> ${values}`);
 

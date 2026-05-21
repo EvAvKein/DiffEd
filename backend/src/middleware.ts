@@ -29,3 +29,9 @@ export async function requireAuthOrApiKey(req: AuthRequest, res: Response<ApiRes
 	}
 	res.status(401).json({ok: false, error: "Unauthorized"});
 }
+
+export function userIdAfterAuth(req: AuthRequest): number {
+	const id = req.session.userId ?? req.userId;
+	if (id === undefined) throw new Error("BUG: userIdAfterAuth called after request unauthenticated by middleware");
+	return id;
+}
