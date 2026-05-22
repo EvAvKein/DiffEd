@@ -12,6 +12,7 @@ import {UserLayout, PublicLayout} from "./layout/Layouts.tsx";
 import UserManagementPage from "./user/userManagement.page.tsx";
 import TermsPage from "./legal/terms.page.tsx";
 import PrivacyPage from "./legal/privacy.page.tsx";
+import ApiDocsPage from "./apiDocs.page.tsx";
 import {ToastContainer} from "./layout/Toast.tsx";
 
 createRoot(document.getElementById("root")!).render(
@@ -30,6 +31,7 @@ createRoot(document.getElementById("root")!).render(
 					<Route path="/login" element={<LoginPage />} />
 					<Route path="/terms" element={<TermsPage />} />
 					<Route path="/privacy" element={<PrivacyPage />} />
+					<Route path="/api-docs" element={<ApiDocsPage />} />
 					<Route path="*" element={<NotFoundPage />} />
 				</Route>
 			</Routes>

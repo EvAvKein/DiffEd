@@ -18,4 +18,5 @@ services:
       dockerfile: ./frontend/dockerfile.dev
     volumes:
       - ./shared:/shared
+      - ./docs:/docs
       - ./frontend/src:/frontend/src

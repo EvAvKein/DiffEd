@@ -10,6 +10,9 @@ export default function Footer() {
 				<Link to="/privacy" className="hover:text-foreground/80 transition-colors">
 					Privacy
 				</Link>
+				<Link to="/api-docs" className="hover:text-foreground/80 transition-colors">
+					API
+				</Link>
 			</div>
 		</footer>
 	);

@@ -40,6 +40,7 @@ export default defineConfig({
 		alias: {
 			"#": path.resolve(__dirname, "./"),
 			"#shared": path.resolve(__dirname, "../shared"),
+			"#docs": path.resolve(__dirname, "../docs"),
 		},
 		// `optimizeDeps` only fixes dev-server pre-bundling, `dedupe` also covers the production build and actual duplicate installs in node_modules.
 		// CodeMirror extensions need to be built against the same @codemirror/state copy as the editor:

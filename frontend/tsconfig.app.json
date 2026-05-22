@@ -3,7 +3,8 @@
 		/* Import aliases setup */
 		"paths": {
 			"#/*": ["./*"],
-			"#shared/*": ["../shared/*"]
+			"#shared/*": ["../shared/*"],
+			"#docs/*": ["../docs/*"]
 		},
 		"tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
 		"target": "ES2022",

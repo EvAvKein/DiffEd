@@ -11,6 +11,7 @@ RUN npm install
 
 # BUILD
 COPY /shared /shared/
+COPY /docs /docs/
 COPY /frontend /frontend/
 
 # HOST
