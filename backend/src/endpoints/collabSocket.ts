@@ -17,6 +17,7 @@ import type {
 	WorkspaceInfo,
 } from "#shared/src/types.js";
 
+const MAX_WORKSPACE_MEMBERS = 8;
 const DATABASE_SAVE_DEBOUNCE_MS = 1500;
 // Gives users time to refresh, recover from a network blip, or navigate back before participation/workspace is destroyed & flushed
 const DISCONNECT_GRACE_MS = 10_000;
@@ -51,7 +52,7 @@ type CollabSocketState = {
 
 export type CollabSocketApi = {
 	createWorkspaceFromFile: (userId: number, fileId: string) => Promise<string>;
-	getWorkspaceInfo: (workspaceId: string, userId?: number) => WorkspaceInfo | undefined;
+	getWorkspaceInfo: (workspaceId: string) => WorkspaceInfo | undefined;
 };
 
 function serializeUpdates(updates: readonly Update[]): SerializedUpdate[] {
@@ -69,6 +70,14 @@ function drainPending<T>(pending: Array<(value: T) => void>, value: T): void {
 
 function buildWorkspaceName(workspaceId: string): string {
 	return `workspace:${workspaceId}`;
+}
+
+function workspaceMemberIds(workspace: Workspace): Set<number> {
+	const ids = new Set<number>(workspace.memberFiles.keys());
+	for (const userId of workspace.connectedSockets.values()) {
+		ids.add(userId);
+	}
+	return ids;
 }
 
 export function initCollabSocket(sockets: Server, db: Pool): CollabSocketApi {
@@ -355,6 +364,12 @@ export function initCollabSocket(sockets: Server, db: Pool): CollabSocketApi {
 				}
 
 				if (!socket.connected) return;
+
+				const members = workspaceMemberIds(workspace);
+				if (!members.has(userId) && members.size >= MAX_WORKSPACE_MEMBERS) {
+					sendResponse({error: "Workspace is full"} satisfies ErrorResponse);
+					return;
+				}
 
 				attachSocketToWorkspace(socket, workspace, userId);
 

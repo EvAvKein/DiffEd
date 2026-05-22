@@ -30,8 +30,8 @@ export function peerExtension(startVersion: number, connection: CollabConnection
 			const version = getSyncedVersion(this.view.state);
 			try {
 				await pushUpdates(connection, version, updates);
-			} catch (error) {
-				console.error("Failed to push updates:", error);
+			} catch {
+				console.log("Failed to push updates. Try another!");
 			}
 			this.pushing = false;
 
@@ -47,9 +47,8 @@ export function peerExtension(startVersion: number, connection: CollabConnection
 					const updates = await pullUpdates(connection, ownerId, version);
 					if (this.done) return;
 					this.view.dispatch(receiveUpdates(this.view.state, updates));
-				} catch (error) {
+				} catch {
 					if (this.done) return;
-					console.error("Failed to pull updates:", error);
 					await delay(PULL_MS_INTERVAL);
 				}
 			}

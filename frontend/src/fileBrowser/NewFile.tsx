@@ -34,12 +34,19 @@ function NewFile({onFileCreate, refreshFileList}: NewFileProps): JSX.Element {
 			refreshFileList();
 			return;
 		}
-		const fileId = fileResult.data;
+		showToast("success", `File "${newFilename}" created`);
 
 		try {
+			const fileId = fileResult.data;
 			await onFileCreate(fileId);
 		} catch (err) {
-			showToast("error", `File creation failed: ${err}`);
+			if (typeof err === "string" && err) {
+				showToast("error", err);
+			} else if (err instanceof Error) {
+				showToast("error", err.message);
+			} else {
+				showToast("error", "Unknown error occurred");
+			}
 			refreshFileList();
 		}
 	}

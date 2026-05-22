@@ -49,7 +49,6 @@ function FileUploader({pushToFileList, refreshFileList}: FileUploaderProps) {
 			});
 		});
 		await Promise.allSettled(uploads);
-		console.log(succesfulUploads);
 		if (succesfulUploads.length <= 0) {
 			showToast("error", "All uploads failed");
 		} else if (succesfulUploads.length === 1) {
@@ -76,7 +75,6 @@ function FileUploader({pushToFileList, refreshFileList}: FileUploaderProps) {
 
 	async function uploadFile(file: File) {
 		if (!file) {
-			console.log("Tried to upload non existent file");
 			return Promise.reject();
 		}
 

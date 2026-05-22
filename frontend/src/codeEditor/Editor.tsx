@@ -205,7 +205,6 @@ export default function Editor({connection, myOwnerId, initialMembers, onRepickF
 				if (hasUnmounted) return;
 				setError(errorMessage(err));
 				setIsLoading(false);
-				console.error("Failed to initialize editor:", err);
 			}
 		}
 

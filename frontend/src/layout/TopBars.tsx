@@ -54,8 +54,7 @@ export function UserTopBar() {
 				const data = await response.json();
 				showToast("error", data.error || "Logout failed");
 			}
-		} catch (e) {
-			console.error("Logout error:", e);
+		} catch {
 			showToast("error", "Network error. Check your connection and try again.");
 		}
 	}

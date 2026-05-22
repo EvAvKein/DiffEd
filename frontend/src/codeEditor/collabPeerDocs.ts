@@ -99,10 +99,9 @@ export class CollabPeersPool {
 				state.doc = {doc, version};
 				this.onPeerReady(ownerId, state.doc);
 				return true;
-			} catch (error) {
+			} catch {
 				if (state.aborted) return false;
 				attempt++;
-				console.error(`Failed to load initial doc for owner ${ownerId}:`, error);
 				await delay(attempt < INITIAL_MAX_ATTEMPTS ? INITIAL_RETRY_DELAY_MS : ERROR_RETRY_DELAY_MS);
 			}
 		}
@@ -129,9 +128,8 @@ export class CollabPeersPool {
 					version: state.doc.version + updates.length,
 				};
 				this.peerUpdateListener?.(ownerId, state.doc, composed!);
-			} catch (error) {
+			} catch {
 				if (state.aborted) return;
-				console.error(`Peer ${ownerId} pull failed:`, error);
 				await delay(ERROR_RETRY_DELAY_MS);
 			}
 		}

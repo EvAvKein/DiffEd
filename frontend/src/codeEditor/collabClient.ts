@@ -51,7 +51,6 @@ export class CollabConnection {
 		this.socket.on("collabResponse", (data: CollabResponse) => {
 			if ("error" in data) {
 				this.rejectAllPending(new Error(`Collab server error: ${data.error}`));
-				console.error("Received error response from collab server:", data.error);
 				return;
 			}
 

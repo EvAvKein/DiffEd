@@ -38,8 +38,7 @@ function getWorkspace(app: Express, api: CollabSocketApi) {
 				return res.status(400).json({ok: false, error: "Invalid workspace ID"});
 			}
 
-			const userId = userIdAfterAuth(req);
-			const info = api.getWorkspaceInfo(parsed.data, userId);
+			const info = api.getWorkspaceInfo(parsed.data);
 			if (!info) {
 				return res.status(404).json({ok: false, error: "Workspace not found"});
 			}
