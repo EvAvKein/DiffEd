@@ -31,10 +31,10 @@ app.use(express.static("../frontend/dist"));
 app.use(express.json());
 app.use(helmetSecurity());
 
-Endpoints.getFiles(app, postgres);
-Endpoints.getFileById(app, postgres);
-Endpoints.uploadFile(app, postgres);
-Endpoints.deleteFile(app, postgres);
+Endpoints.getFiles(app);
+Endpoints.getFileById(app);
+Endpoints.uploadFile(app);
+Endpoints.deleteFile(app);
 
 UserEndpoints.signupUser(app);
 UserEndpoints.modifyUser(app);

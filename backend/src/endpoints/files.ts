@@ -1,29 +1,26 @@
 import type {Express, Response} from "express";
-import {type Pool} from "pg";
 import {timestampedLog} from "#/src/logging.js";
 import {UserFileSchema} from "#/src/validation/schemas.js";
 import {requireAuthOrApiKey, userIdAfterAuth, type AuthRequest} from "#/src/middleware.js";
-import type {UserFile, ApiResponse} from "#shared/src/types.js";
+import type {UserFile, ApiResponse, FileListItem} from "#shared/src/types.js";
 import {isDbError, isInvalidByteSequence, isUniqueViolation} from "#/src/utils.js";
 import {validateFile} from "#shared/src/fileValidation.js";
 import multer from "multer";
-import assert from "node:assert";
+import fileQueryService from "#/src/queries/files.js";
 
-function getFiles(app: Express, db: Pool) {
-	app.get("/api/files", requireAuthOrApiKey, async (req: AuthRequest, res: Response<ApiResponse<UserFile[]>>) => {
+function getFiles(app: Express) {
+	app.get("/api/files", requireAuthOrApiKey, async (req: AuthRequest, res: Response<ApiResponse<FileListItem[]>>) => {
 		timestampedLog(`REQUEST >>> ${req.method} ${req.url}`);
 
 		const userId = userIdAfterAuth(req);
-		const query = "SELECT id, name FROM files WHERE owner_id = $1";
-		timestampedLog(`DB QUERY >>> ${query}`);
-		timestampedLog(`DB VALUES >>> ${userId}`);
 
 		try {
-			const result = await db.query(query, [userId]);
-			return res.status(200).json({ok: true, data: result.rows});
+			const result = await fileQueryService.getFileInfoById(userId);
+
+			return res.status(200).json({ok: true, data: result});
 		} catch (error: unknown) {
 			if (isDbError(error)) {
-				timestampedLog(`ERROR <<< ${error.code}: ${error.detail}`);
+				timestampedLog(`DB ERROR <<< ${error.code}: ${error.detail}`);
 			} else {
 				timestampedLog(`ERROR <<< ${error}`);
 			}
@@ -32,7 +29,7 @@ function getFiles(app: Express, db: Pool) {
 	});
 }
 
-function getFileById(app: Express, db: Pool) {
+function getFileById(app: Express) {
 	app.get("/api/files/:fileId", requireAuthOrApiKey, async (req: AuthRequest, res: Response<ApiResponse<UserFile>>) => {
 		timestampedLog(`REQUEST >>> ${req.method} ${req.url}`);
 
@@ -40,24 +37,18 @@ function getFileById(app: Express, db: Pool) {
 		if (fileId.error) {
 			return res.status(400).json({ok: false, error: "Invalid file id"});
 		}
-
 		const userId = userIdAfterAuth(req);
-		const query = "SELECT id, name, content FROM files WHERE id = $1 AND owner_id = $2";
-		const values = [fileId.data, userId];
-		timestampedLog(`DB QUERY >>> ${query}`);
-		timestampedLog(`DB VALUES >>> ${values}`);
 
 		try {
-			const result = await db.query(query, values);
-
-			if (!result.rowCount) {
+			const result = await fileQueryService.getFileById(userId, fileId.data);
+			if (!result) {
 				return res.status(403).json({ok: false, error: "Forbidden"});
 			}
 
-			return res.status(200).json({ok: true, data: result.rows[0]});
+			return res.status(200).json({ok: true, data: result});
 		} catch (error: unknown) {
 			if (isDbError(error)) {
-				timestampedLog(`ERROR <<< ${error.code}: ${error.detail}`);
+				timestampedLog(`DB ERROR <<< ${error.code}: ${error.detail}`);
 			} else {
 				timestampedLog(`ERROR <<< ${error}`);
 			}
@@ -70,7 +61,7 @@ const upload = multer({
 	storage: multer.memoryStorage(),
 });
 
-function uploadFile(app: Express, db: Pool) {
+function uploadFile(app: Express) {
 	app.post(
 		"/api/files",
 		requireAuthOrApiKey,
@@ -83,41 +74,36 @@ function uploadFile(app: Express, db: Pool) {
 			}
 
 			const f = req.file;
-			const fileText = f.buffer.toString("utf8");
+			const fileName = f.originalname;
+			const fileContent = f.buffer.toString("utf8");
 
-			const err: string | null = validateFile(f.mimetype, f.size, fileText, f.originalname);
+			const err: string | null = validateFile(f.mimetype, f.size, fileContent, fileName);
 			if (err) {
 				return res.status(415).json({ok: false, error: err});
 			}
 
-			const userId = userIdAfterAuth(req);
-			const query = "INSERT INTO files (id, name, content, owner_id) VALUES ($1, $2, $3, $4) RETURNING id";
-			const values = [crypto.randomUUID(), f.originalname, fileText, userId];
-
-			timestampedLog(`DB QUERY >>> ${query}`);
-			timestampedLog(`DB VALUES >>> ${JSON.stringify(values)}`);
-
 			try {
-				const result = await db.query(query, values);
-				assert(result.rowCount === 1, "Result did not contain any rows");
-				const fileId = result.rows[0].id;
-				assert(fileId, "Result did not contain an id field");
+				const userId = userIdAfterAuth(req);
+				const uuid = crypto.randomUUID();
+
+				const fileId = await fileQueryService.uploadFile(userId, uuid, fileName, fileContent);
+				if (!fileId) throw null;
 
 				return res.status(201).json({ok: true, data: fileId});
 			} catch (error: unknown) {
-				if (!isDbError(error)) {
-					timestampedLog(`ERROR <<< ${error}`);
-					return res.status(500).json({ok: false, error: "Internal server error"});
-				}
-				timestampedLog(`DB ERROR <<< ${error.code}: ${error.detail}`);
+				if (isDbError(error)) {
+					timestampedLog(`DB ERROR <<< ${error.code}: ${error.detail}`);
 
-				// this binary file handling happens if the checks before db fail
-				// @NOTE the messaging is different from normal checks
-				if (isInvalidByteSequence(error)) {
-					return res.status(415).json({ok: false, error: `File '${f.originalname}' has binary encoding`});
-				}
-				if (isUniqueViolation(error)) {
-					return res.status(409).json({ok: false, error: `A file with name '${f.originalname}' already exists`});
+					// this binary file handling happens if the checks before db fail
+					// @NOTE the messaging is different from normal checks
+					if (isInvalidByteSequence(error)) {
+						return res.status(415).json({ok: false, error: `File '${fileName}' has binary encoding`});
+					}
+					if (isUniqueViolation(error)) {
+						return res.status(409).json({ok: false, error: `A file with name '${fileName}' already exists`});
+					}
+				} else {
+					timestampedLog(`ERROR <<< ${error}`);
 				}
 
 				return res.status(500).json({ok: false, error: "Internal server error"});
@@ -126,7 +112,7 @@ function uploadFile(app: Express, db: Pool) {
 	);
 }
 
-function deleteFile(app: Express, db: Pool) {
+function deleteFile(app: Express) {
 	app.delete("/api/files/:fileId", requireAuthOrApiKey, async (req: AuthRequest, res: Response<ApiResponse<null>>) => {
 		timestampedLog(`REQUEST >>> ${req.method} ${req.url}`);
 
@@ -136,22 +122,17 @@ function deleteFile(app: Express, db: Pool) {
 		}
 
 		const userId = userIdAfterAuth(req);
-		const query = "DELETE FROM files WHERE id = $1 AND owner_id = $2";
-		const values = [fileId.data, userId];
-		timestampedLog(`DB QUERY >>> ${query}`);
-		timestampedLog(`DB VALUES >>> ${values}`);
 
 		try {
-			const result = await db.query(query, values);
-
-			if (!result.rowCount) {
+			const result = await fileQueryService.deleteFileById(userId, fileId.data);
+			if (!result) {
 				return res.status(403).json({ok: false, error: "Forbidden"});
 			}
 
 			return res.status(200).json({ok: true, data: null});
 		} catch (error: unknown) {
 			if (isDbError(error)) {
-				timestampedLog(`ERROR <<< ${error.code}: ${error.detail}`);
+				timestampedLog(`DB ERROR <<< ${error.code}: ${error.detail}`);
 			} else {
 				timestampedLog(`ERROR <<< ${error}`);
 			}
