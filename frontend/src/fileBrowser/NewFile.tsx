@@ -3,6 +3,7 @@ import Button from "#/src/components/Button";
 import {useShowToast} from "#/src/stores/toastStore";
 import Input from "#/src/components/Input";
 import {apiFetch} from "#/src/utils.ts";
+import {validateFileNameLen, MAX_FILENAME_LEN} from "#shared/src/fileValidation.ts";
 
 type NewFileProps = {
 	onFileCreate: (fileId: string) => Promise<void>;
@@ -10,17 +11,19 @@ type NewFileProps = {
 };
 
 function NewFile({onFileCreate, refreshFileList}: NewFileProps): JSX.Element {
-	const [newFilename, setNewFilename] = useState<string>("");
+	const [newFileName, setNewFileName] = useState<string>("");
+	const [touched, setTouched] = useState<boolean>(false);
+	const fileNameError: string | null = newFileName.length > 0 ? validateFileNameLen(newFileName) : null;
 	const showToast = useShowToast();
 
 	async function openNewFile() {
-		if (!newFilename || !newFilename.trim().length) {
+		if (!newFileName || !newFileName.trim().length) {
 			showToast("error", "Filename can't be empty");
 			return;
 		}
 
 		const formData = new FormData();
-		const file = new File([""], newFilename, {type: "text/plain"});
+		const file = new File([""], newFileName, {type: "text/plain"});
 
 		formData.append("file", file);
 
@@ -59,16 +62,32 @@ function NewFile({onFileCreate, refreshFileList}: NewFileProps): JSX.Element {
 					openNewFile();
 				}}
 			>
-				<label>
-					New File
-					<Input
-						id="fileNameInput"
-						value={newFilename}
-						placeholder="filename"
-						onChange={(event) => setNewFilename(event.target.value)}
-					/>
-				</label>
-				<Button type="submit">Create</Button>
+				<ul id="filename-hints" className="text-xs text-foreground-sexy list-disc flex flex-col w-fit mx-auto">
+					<li>Maximum {MAX_FILENAME_LEN} characters</li>
+					<li>At least one non-whitespace character</li>
+				</ul>
+				<div
+					id="filename-error"
+					aria-live="polite"
+					aria-atomic="true"
+					className="flex justify-center text-sm text-error"
+				>
+					{fileNameError}
+				</div>
+				<label htmlFor="fileNameInput">New File</label>
+				<Input
+					id="fileNameInput"
+					value={newFileName}
+					aria-describedby="filename-hints"
+					aria-invalid={touched && !!fileNameError}
+					aria-required={true}
+					placeholder="filename"
+					onChange={(event) => setNewFileName(event.target.value)}
+					onBlur={() => setTouched(true)}
+				/>
+				<Button type="submit" disabled={!!fileNameError || newFileName.length === 0}>
+					Create
+				</Button>
 			</form>
 		</div>
 	);

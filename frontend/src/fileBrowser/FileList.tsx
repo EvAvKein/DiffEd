@@ -4,6 +4,8 @@ import type {ApiResponse} from "#shared/src/types.js";
 import {apiFetch} from "#/src/utils.js";
 import {useShowToast} from "#/src/stores/toastStore";
 import Button from "#/src/components/Button";
+import DeleteButton from "../components/DeleteButton";
+import {IconDownload} from "@tabler/icons-react";
 
 type fileListProps = {
 	onFileSelect: (fileId: string) => Promise<void>;
@@ -40,8 +42,6 @@ function FileList({onFileSelect, fileList, refreshFileList, onSortToggle, descen
 	}
 
 	async function handleDelete(id: string) {
-		if (!window.confirm("Are you sure you want to delete this file?")) return;
-
 		const response: ApiResponse<null> = await apiFetch(`/api/files/${id}`, {
 			method: "DELETE",
 		});
@@ -79,21 +79,16 @@ function FileList({onFileSelect, fileList, refreshFileList, onSortToggle, descen
 						type="button"
 						className="cursor-pointer hover:underline mx-4 flex-1 text-left"
 						onClick={() => selectFile(file.id)}
+						// Untruncated filename for screenreaders
+						aria-label={file.name}
 					>
 						{file.name.length <= MAX_VIEWABLE_FILENAME_LEN ? file.name : truncateFileName(file.name)}
 					</button>
 					<span className="ml-auto flex items-center">
 						<Button onClick={() => handleDownload(file)} aria-label={`Download ${file.name}`}>
-							<span aria-hidden="true">{" 🡻 "}</span>
+							<IconDownload size={18} aria-hidden />
 						</Button>
-						<Button
-							onClick={() => handleDelete(file.id)}
-							className="font-bold"
-							danger={true}
-							aria-label={`Delete ${file.name}`}
-						>
-							<span aria-hidden="true">{" X "}</span>
-						</Button>
+						<DeleteButton onDelete={() => handleDelete(file.id)} itemName={file.name} />
 					</span>
 				</span>
 			</li>

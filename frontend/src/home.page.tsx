@@ -24,7 +24,7 @@ export default function HomePage() {
 
 			<div className="min-h-[calc(100vh-105px)] flex flex-col items-center justify-center px-8">
 				<div className="text-center max-w-lg">
-					<p className="home-sub text-foreground/50 font-mono text-xs tracking-[0.35em] uppercase mb-5 select-none">
+					<p className="home-sub text-foreground-sexy font-mono text-xs tracking-[0.35em] uppercase mb-5 select-none">
 						collaborative code editor
 					</p>
 

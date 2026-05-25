@@ -4,6 +4,8 @@ import Footer from "#/src/layout/Footer";
 import {z} from "zod";
 import Button from "#/src/components/Button";
 import Input from "#/src/components/Input";
+import Subheading from "../components/Subheading";
+import OutlineDiv from "#/src/components/OutlineDiv";
 import AcceptCancelDialog from "#/src/components/AcceptCancelDialog";
 import PasswordConfirmDialog from "#/src/components/PasswordConfirmDialog";
 import {useShowToast} from "#/src/stores/toastStore";
@@ -23,18 +25,11 @@ function UserSettings({user, onUpdate}: UserSettingProps) {
 	const [currentEmail, setCurrentEmail] = useState(user.email);
 	const [newUsername, setNewUsername] = useState("");
 	const [newEmail, setNewEmail] = useState("");
-	const [passwordConfirm, setPasswordConfirm] = useState(false);
 	const showToast = useShowToast();
-
-	useEffect(() => {
-		if (!newUsername && !newEmail) setPasswordConfirm(false);
-		else setPasswordConfirm(true);
-	}, [newUsername, newEmail]);
 
 	async function resetState() {
 		setNewUsername("");
 		setNewEmail("");
-		setPasswordConfirm(false);
 	}
 
 	function isValidInput() {
@@ -103,65 +98,53 @@ function UserSettings({user, onUpdate}: UserSettingProps) {
 
 	return (
 		<>
-			<div>
-				<h2>Username</h2>
+			<div className="flex flex-col justify-center items-center">
+				<label htmlFor="username-input">Username</label>
+				<Input
+					id="username-input"
+					type="text"
+					placeholder={currentUsername}
+					value={newUsername}
+					onChange={(e) => setNewUsername(e.target.value)}
+				/>
+				<label htmlFor="email-input">Email</label>
+				<Input
+					id="email-input"
+					type="email"
+					placeholder={currentEmail}
+					value={newEmail}
+					onChange={(e) => setNewEmail(e.target.value)}
+				/>
 				<div>
-					<Input
-						type="text"
-						placeholder={currentUsername}
-						value={newUsername}
-						onChange={(e) => setNewUsername(e.target.value)}
+					<PasswordConfirmDialog
+						disabled={newEmail.length === 0 && newUsername.length === 0}
+						onConfirm={handleConfirmClick}
+						onCancel={() => {
+							resetState();
+						}}
 					/>
 				</div>
-				<h2>Email</h2>
-				<div>
-					<Input
-						type="email"
-						placeholder={currentEmail}
-						value={newEmail}
-						onChange={(e) => setNewEmail(e.target.value)}
-					/>
-				</div>
-			</div>
-			<div>
-				{passwordConfirm ? (
-					<div>
-						<PasswordConfirmDialog
-							onConfirm={handleConfirmClick}
-							onCancel={() => {
-								setPasswordConfirm(false);
-								resetState();
-							}}
-						/>
-					</div>
-				) : (
-					<div></div>
-				)}
 			</div>
 		</>
 	);
 }
 
 function Password() {
-	const [passwordConfirm, setPasswordConfirm] = useState(false);
 	const [isEditing, setIsEditing] = useState(false);
 	const [newPassword, setNewPassword] = useState("");
 	const [newPassword2, setNewPassword2] = useState("");
+	const [oldPassword, setOldPassword] = useState("");
 	const showToast = useShowToast();
-
-	useEffect(() => {
-		if (!newPassword && !newPassword2) setPasswordConfirm(false);
-		else setPasswordConfirm(true);
-	}, [newPassword, newPassword2]);
 
 	function resetState() {
 		setIsEditing(false);
-		setPasswordConfirm(false);
 		setNewPassword("");
 		setNewPassword2("");
+		setOldPassword("");
 	}
 
-	async function handleConfirmClick(password: string) {
+	async function handleSubmit(e: React.SubmitEvent) {
+		e.preventDefault();
 		if (!newPassword || !newPassword2) {
 			return showToast("error", "Please fill all the fields!");
 		}
@@ -175,7 +158,7 @@ function Password() {
 				method: "PATCH",
 				headers: {"Content-Type": "application/json"},
 				credentials: "include",
-				body: JSON.stringify({password, newPassword, newPassword2}),
+				body: JSON.stringify({password: oldPassword, newPassword, newPassword2}),
 			});
 
 			if (!response.ok) {
@@ -190,47 +173,52 @@ function Password() {
 	}
 
 	return (
-		<div>
+		<div aria-live="polite" className="my-2">
 			{isEditing ? (
-				<>
+				<form onSubmit={(e) => handleSubmit(e)} className="flex flex-col items-center justify-center">
+					<label htmlFor="new-password">New password</label>
+					<Input
+						id="new-password"
+						placeholder="**************"
+						type="password"
+						value={newPassword}
+						onChange={(e) => setNewPassword(e.target.value)}
+					/>
+					<label htmlFor="new-password-again">New password, again</label>
+					<Input
+						id="new-password-again"
+						placeholder="**************"
+						type="password"
+						value={newPassword2}
+						onChange={(e) => setNewPassword2(e.target.value)}
+					/>
+					<label htmlFor="old-password">Old password</label>
+					<Input
+						id="old-password"
+						placeholder="**************"
+						type="password"
+						value={oldPassword}
+						onChange={(e) => setOldPassword(e.target.value)}
+					/>
 					<div>
-						<Input
-							placeholder="new password"
-							type="password"
-							value={newPassword}
-							onChange={(e) => setNewPassword(e.target.value)}
-						/>
+						<Button type="submit">Submit</Button>
+						<Button
+							type="reset"
+							onClick={() => {
+								resetState();
+								setIsEditing(false);
+							}}
+						>
+							Cancel
+						</Button>
 					</div>
-					<div>
-						<Input
-							placeholder="new password, again"
-							type="password"
-							value={newPassword2}
-							onChange={(e) => setNewPassword2(e.target.value)}
-						/>
-					</div>
-					<div>
-						{passwordConfirm ? (
-							<div>
-								<PasswordConfirmDialog
-									onConfirm={handleConfirmClick}
-									onCancel={() => {
-										setPasswordConfirm(false);
-										resetState();
-									}}
-								/>
-							</div>
-						) : (
-							<div></div>
-						)}
-					</div>
-				</>
+				</form>
 			) : (
-				<div>
+				<>
 					<Button onClick={() => setIsEditing(true)} aria-label="Change password">
-						Change Password
+						Change password
 					</Button>
-				</div>
+				</>
 			)}
 		</div>
 	);
@@ -258,25 +246,23 @@ function GithubLink({githubLinked}: {githubLinked: boolean}) {
 		}
 	}
 
-	if (githubLinked) {
-		return (
-			<div>
-				<span>GitHub: Linked</span>
-				&nbsp;
-				<Button onClick={handleUnlink} disabled={isLoading} aria-label="Unlink GitHub account">
-					{isLoading ? "Unlinking..." : "Unlink"}
-				</Button>
-			</div>
-		);
-	}
-
 	return (
-		<div>
-			<a href="/api/auth/github?action=link_account">
-				<Button type="button" aria-label="Link GitHub account">
+		<div aria-live="polite" className="my-2">
+			{githubLinked ? (
+				<>
+					<span>GitHub: Linked</span>
+					<Button onClick={handleUnlink} disabled={isLoading} aria-label="Unlink GitHub account">
+						{isLoading ? "Unlinking..." : "Unlink"}
+					</Button>
+				</>
+			) : (
+				<a
+					href="/api/auth/github?action=link_account"
+					className="rounded-sm cursor-pointer m-1 p-1 bg-surface hover:text-accent text-foreground-light"
+				>
 					Link GitHub
-				</Button>
-			</a>
+				</a>
+			)}
 		</div>
 	);
 }
@@ -297,7 +283,7 @@ function VimBindings({enabled}: {enabled: boolean}) {
 			});
 			if (!response.ok) throw new Error(response.error);
 			updateUser({vim_bindings: !enabled});
-			showToast("success", `Vim bindings ${!enabled ? "enabled" : "disabled"}`);
+			showToast("info", `Vim bindings ${!enabled ? "enabled" : "disabled"}`);
 		} catch (e) {
 			showToast("error", e instanceof Error ? e.message : String(e));
 		}
@@ -306,7 +292,7 @@ function VimBindings({enabled}: {enabled: boolean}) {
 
 	return (
 		<div>
-			<span>VIM BY DEFAULT:</span>
+			<span>Vim keybindings default</span>
 			<Button onClick={handleToggle} disabled={isLoading} aria-label="Toggle vim bindings">
 				{enabled ? "On" : "Off"}
 			</Button>
@@ -315,15 +301,10 @@ function VimBindings({enabled}: {enabled: boolean}) {
 }
 
 function Delete() {
-	const [passwordConfirm, setPasswordConfirm] = useState(false);
 	const navigate = useNavigate();
 	const showToast = useShowToast();
 
 	async function deleteAccount(password: string) {
-		if (!window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
-			return;
-		}
-
 		try {
 			const response: ApiResponse<null> = await apiFetch("/api/user", {
 				method: "DELETE",
@@ -343,16 +324,14 @@ function Delete() {
 		}
 	}
 
-	return !passwordConfirm ? (
-		<div>
-			<Button onClick={() => setPasswordConfirm(true)} aria-label="Delete account">
-				Delete Account
-			</Button>
-		</div>
-	) : (
-		<div>
-			<h2>You are deleting your account!</h2>
-			<PasswordConfirmDialog onConfirm={deleteAccount} onCancel={() => setPasswordConfirm(false)} />
+	return (
+		<div className="flex flex-col justify-center items-center outline-1 outline-error-accent rounded-sm p-2 m-2">
+			<Subheading className="text-error-accent">Danger Zone</Subheading>
+			<PasswordConfirmDialog
+				submitButtonLabel="Delete Account"
+				onConfirm={deleteAccount}
+				hint="You're about to remove your account! This cannot be undone..."
+			/>
 		</div>
 	);
 }
@@ -379,7 +358,7 @@ function ApiKey({hasApiKey}: {hasApiKey: boolean}) {
 
 			updateUser({has_apikey: true});
 			await navigator.clipboard.writeText(response.data);
-			showToast("success", "Api key created and copied to clipboard");
+			showToast("success", "API key created and copied to clipboard");
 		} catch (e) {
 			showToast("error", e instanceof Error ? e.message : String(e));
 		} finally {
@@ -401,7 +380,7 @@ function ApiKey({hasApiKey}: {hasApiKey: boolean}) {
 			}
 
 			await navigator.clipboard.writeText(response.data);
-			showToast("success", "Api key copied to clipboard");
+			showToast("success", "API key copied to clipboard");
 		} catch (e) {
 			showToast("error", e instanceof Error ? e.message : String(e));
 		} finally {
@@ -426,7 +405,7 @@ function ApiKey({hasApiKey}: {hasApiKey: boolean}) {
 
 			setAcceptDelete(false);
 			updateUser({has_apikey: false});
-			showToast("success", "Successfully deleted Api key");
+			showToast("success", "Successfully deleted API key");
 		} catch (e) {
 			showToast("error", e instanceof Error ? e.message : String(e));
 		} finally {
@@ -435,33 +414,28 @@ function ApiKey({hasApiKey}: {hasApiKey: boolean}) {
 	}
 
 	return (
-		<>
-			<div>
-				<Button onClick={createNewApiKey} disabled={isLoading} aria-label="Create new Api key">
-					Create new Api key
-				</Button>
-				{hasApiKey && (
-					<Button onClick={copyApiKey} disabled={isLoading} aria-label="Get current Api key">
-						Copy current Api key
+		<OutlineDiv>
+			<Subheading>API Keys</Subheading>
+			<Button onClick={createNewApiKey} disabled={isLoading} aria-label="Create new API key">
+				Create new API key
+			</Button>
+			<Button onClick={copyApiKey} disabled={isLoading || !hasApiKey} aria-label="Get current API key">
+				Copy current API key
+			</Button>
+			<div aria-live="polite">
+				{showDeleteConfirm ? (
+					<AcceptCancelDialog
+						textToShow="Delete your current key?"
+						onAccept={deleteApiKey}
+						onCancel={() => setAcceptDelete(false)}
+					/>
+				) : (
+					<Button onClick={() => setAcceptDelete(true)} disabled={isLoading || !hasApiKey} aria-label="Delete API key">
+						Delete API key
 					</Button>
 				)}
 			</div>
-			{hasApiKey && (
-				<div>
-					{showDeleteConfirm ? (
-						<AcceptCancelDialog
-							textToShow="Are you sure you want to delete the current key?"
-							onAccept={deleteApiKey}
-							onCancel={() => setAcceptDelete(false)}
-						/>
-					) : (
-						<Button onClick={() => setAcceptDelete(true)} disabled={isLoading} aria-label="Delete Api key">
-							Delete Api key
-						</Button>
-					)}
-				</div>
-			)}
-		</>
+		</OutlineDiv>
 	);
 }
 
@@ -532,30 +506,30 @@ function Avatar({hasAvatar}: {hasAvatar: boolean}) {
 	}
 
 	return (
-		<>
-			<div className="w-32 h-32 rounded-full overflow-hidden">
+		<OutlineDiv>
+			<Subheading>Avatar</Subheading>
+			<div className="w-32 h-32 rounded-full overflow-hidden m-2">
 				<img src={avatarURL} alt="avatar" className="w-full h-full object-cover" />
 			</div>
 			<input type="file" accept="image/*" onChange={handleUpload} ref={fileInputRef} style={{display: "none"}} />
 			<Button disabled={isLoading} onClick={() => fileInputRef.current?.click()}>
 				Upload avatar
 			</Button>
-			<span>max. 1 MB (.png .webp .jpg .jpeg)</span>
-
-			{hasAvatar && !acceptDelete ? (
-				<div>
-					<Button disabled={isLoading} onClick={() => setAcceptDelete(true)}>
+			<div aria-live="polite">
+				{hasAvatar && !acceptDelete ? (
+					<Button disabled={isLoading} danger={true} onClick={() => setAcceptDelete(true)}>
 						Delete avatar
 					</Button>
-				</div>
-			) : hasAvatar ? (
-				<AcceptCancelDialog
-					textToShow="Are you sure you want to delete the avatar?"
-					onAccept={handleDelete}
-					onCancel={() => setAcceptDelete(false)}
-				/>
-			) : null}
-		</>
+				) : hasAvatar ? (
+					<AcceptCancelDialog
+						textToShow="Delete your avatar?"
+						onAccept={handleDelete}
+						onCancel={() => setAcceptDelete(false)}
+					/>
+				) : null}
+			</div>
+			<span className="text-sm text-foreground-sexy">max. 1 MB (.png .webp .jpg .jpeg)</span>
+		</OutlineDiv>
 	);
 }
 
@@ -583,33 +557,29 @@ export default function UserManagementPage() {
 	return isLoading || !currentUser ? (
 		<div>Loading...</div>
 	) : (
-		<div>
-			<h1>Account Settings</h1>
-			<div>
-				<UserSettings user={currentUser} onUpdate={(username, email) => updateUser({username, email})} />
-			</div>
-			<div>
-				<Password />
-			</div>
-			<div>
-				<GithubLink githubLinked={!!currentUser.github_linked} />
-			</div>
-			<div>
+		<>
+			<div className="grid grid-cols-1 gap-4 w-64 mx-auto">
+				<OutlineDiv>
+					<Subheading>Account settings</Subheading>
+					<UserSettings user={currentUser} onUpdate={(username, email) => updateUser({username, email})} />
+					<Password />
+					<GithubLink githubLinked={!!currentUser.github_linked} />
+				</OutlineDiv>
+
 				<ApiKey hasApiKey={!!currentUser.has_apikey} />
-			</div>
-			<div>
-				<VimBindings enabled={currentUser.vim_bindings} />
-			</div>
-			<div>
-				DANGER ZONE!!!
-				<Delete />
-			</div>
-			<div>
+
+				<OutlineDiv>
+					<Subheading>Editor settings</Subheading>
+					<VimBindings enabled={currentUser.vim_bindings} />
+				</OutlineDiv>
+
 				<Avatar hasAvatar={!!currentUser.has_avatar} />
+
+				<Delete />
 			</div>
 			<div className="mt-12">
 				<Footer />
 			</div>
-		</div>
+		</>
 	);
 }

@@ -1,4 +1,5 @@
 import {type UserFile, type SigningUser} from "#shared/src/types.js";
+import {MAX_FILENAME_LEN} from "#shared/src/fileValidation.js";
 import {z, type ZodType} from "zod";
 
 const PASSWORD_MIN_LENGTH = 14;
@@ -23,10 +24,12 @@ export const SignupSchema = z.object({
 	password: passwordSchema,
 }) satisfies ZodType<SigningUser>;
 
-// id here for testing
 export const UserFileSchema = z.object({
 	id: z.uuidv4(),
-	name: z.string(),
+	name: z
+		.string()
+		.max(MAX_FILENAME_LEN, `Filename length cannot exceed ${MAX_FILENAME_LEN} characters`)
+		.regex(/\S/, "Filename can't be empty"),
 	content: z.string(),
 	owner_id: z.number(),
 }) satisfies ZodType<UserFile>;

@@ -70,6 +70,7 @@ export default function LoginPage() {
 					placeholder="username or email"
 					value={loginIdentifier}
 					onChange={(e) => setLoginIdentifier(e.target.value)}
+					autoFocus={true}
 				/>
 				<label htmlFor="password" className="text-right">
 					Password
@@ -81,7 +82,11 @@ export default function LoginPage() {
 					value={loginPassword}
 					onChange={(e) => setLoginPassword(e.target.value)}
 				/>
-				<Button type="submit" className="col-span-2 mx-auto">
+				<Button
+					type="submit"
+					className="col-span-2 mx-auto"
+					disabled={loginIdentifier.length === 0 || loginPassword.length === 0}
+				>
 					Log In
 				</Button>
 			</form>

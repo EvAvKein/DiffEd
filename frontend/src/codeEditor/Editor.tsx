@@ -21,6 +21,7 @@ import Button from "../components/Button";
 import ResettingForm from "../components/ResettingForm";
 import {useShowToast} from "../stores/toastStore";
 import {useCurrentUser} from "../stores/userStore";
+import {validateFileNameLen} from "#shared/src/fileValidation";
 
 const INITIAL_DOC_MAX_ATTEMPTS = 2;
 const INITIAL_DOC_RETRY_DELAY_MS = 250;
@@ -261,7 +262,13 @@ export default function Editor({connection, myOwnerId, initialMembers, onRepickF
 				onSelect={setSelectedPeerId}
 			/>
 			<div className="flex items-center justify-between p-1">
-				<ResettingForm initialValue={fileName} onSubmit={handleRename} inputLabel="Filename" buttonLabel="Rename" />
+				<ResettingForm
+					initialValue={fileName}
+					onSubmit={handleRename}
+					inputLabel="Filename"
+					buttonLabel="Rename"
+					validation={validateFileNameLen}
+				/>
 				<div className="flex items-center">
 					<label className="text-sm">
 						Syntax Highlighting

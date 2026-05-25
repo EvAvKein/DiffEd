@@ -29,6 +29,7 @@
 		"@codemirror/state": "^6.6.0",
 		"@codemirror/view": "^6.33.0",
 		"@replit/codemirror-vim": "^6.3.0",
+		"@tabler/icons-react": "^3.44.0",
 		"@tailwindcss/vite": "^4.2.2",
 		"codemirror": "^6.0.0",
 		"react": "^19.2.0",
