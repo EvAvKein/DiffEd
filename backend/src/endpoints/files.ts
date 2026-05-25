@@ -14,7 +14,7 @@ function getFiles(app: Express, db: Pool) {
 		timestampedLog(`REQUEST >>> ${req.method} ${req.url}`);
 
 		const userId = userIdAfterAuth(req);
-		const query = "SELECT * FROM files WHERE owner_id = $1";
+		const query = "SELECT id, name FROM files WHERE owner_id = $1";
 		timestampedLog(`DB QUERY >>> ${query}`);
 		timestampedLog(`DB VALUES >>> ${userId}`);
 
@@ -42,7 +42,7 @@ function getFileById(app: Express, db: Pool) {
 		}
 
 		const userId = userIdAfterAuth(req);
-		const query = "SELECT * FROM files WHERE id = $1 AND owner_id = $2";
+		const query = "SELECT id, name, content FROM files WHERE id = $1 AND owner_id = $2";
 		const values = [fileId.data, userId];
 		timestampedLog(`DB QUERY >>> ${query}`);
 		timestampedLog(`DB VALUES >>> ${values}`);

@@ -271,8 +271,6 @@ curl -X DELETE -H "x-api-key: your_api_key" http://localhost:8080/api/user/avata
   - an `array` of your files, each with:
     - `id: string`, a UUID
     - `name: string`
-    - `content: string`
-    - `owner_id: number`
 - Examples
 
 ```js
@@ -282,7 +280,7 @@ console.log(response.data); // logs your files
 
 ```shell
 curl -X GET -H "x-api-key: your_api_key" http://localhost:8080/api/files
-{"ok":true,"data":[{"id":"a1b2c3d4-...","name":"hello.txt","content":"hi there","owner_id":1}]}
+{"ok":true,"data":[{"id":"a1b2c3d4-...","name":"hello.txt"}]}
 ```
 
 #### Get file
@@ -295,7 +293,6 @@ curl -X GET -H "x-api-key: your_api_key" http://localhost:8080/api/files
   - `id: string`, a UUID
   - `name: string`
   - `content: string`
-  - `owner_id: number`
 - Errors:
   - 400 if the file id is not a valid UUID
   - 403 if the file does not exist or is not yours
@@ -308,7 +305,7 @@ console.log(response.data); // logs the file
 
 ```shell
 curl -X GET -H "x-api-key: your_api_key" http://localhost:8080/api/files/a1b2c3d4-...
-{"ok":true,"data":{"id":"a1b2c3d4-...","name":"hello.txt","content":"hi there","owner_id":1}}
+{"ok":true,"data":{"id":"a1b2c3d4-...","name":"hello.txt","content":"hi there"}}
 ```
 
 #### Upload file
