@@ -37,7 +37,7 @@ function NewFile({onFileCreate, refreshFileList}: NewFileProps): JSX.Element {
 			refreshFileList();
 			return;
 		}
-		showToast("success", `File "${newFilename}" created`);
+		showToast("success", `File "${newFileName}" created`);
 
 		try {
 			const fileId = fileResult.data;

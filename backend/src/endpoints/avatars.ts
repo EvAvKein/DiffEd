@@ -4,11 +4,11 @@ import fs from "fs";
 import type {Express, Request, Response, NextFunction} from "express";
 import {isDbError} from "#/src/utils.js";
 import type {ApiResponse} from "#shared/src/types.js";
+import {MAX_AVATAR_SIZE} from "#shared/src/userValidation.js";
 import {timestampedLog} from "#/src/logging.js";
 import {requireAuthOrApiKey, userIdAfterAuth, type AuthRequest} from "#/src/middleware.js";
 import userQueryService from "#/src/queries/users.js";
 
-const MAX_IMGSIZE = 1024 * 1024; // 1 MiB
 const AVATAR_DIR = path.resolve(process.cwd(), "src/private/avatars");
 const DEFAULT_AVATAR = "default.jpg";
 
@@ -25,7 +25,7 @@ const storage = multer.diskStorage({
 const upload = multer({
 	storage,
 	limits: {
-		fileSize: MAX_IMGSIZE,
+		fileSize: MAX_AVATAR_SIZE,
 		files: 1, // allow only one file to be sent
 	},
 	fileFilter: function (_req: Request, file: Express.Multer.File, cb) {

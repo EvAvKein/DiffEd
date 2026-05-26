@@ -1,14 +1,15 @@
 import {type UserFile, type SigningUser} from "#shared/src/types.js";
 import {MAX_FILENAME_LEN} from "#shared/src/fileValidation.js";
+import {PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH} from "#shared/src/userValidation.js";
 import {z, type ZodType} from "zod";
 
-const PASSWORD_MIN_LENGTH = 14;
 const USERNAME_MIN_LENGTH = 3;
 const USERNAME_MAX_LENGTH = 20;
 
 export const passwordSchema = z
 	.string()
-	.min(PASSWORD_MIN_LENGTH, `Password must be at least ${PASSWORD_MIN_LENGTH} characters long`);
+	.min(PASSWORD_MIN_LENGTH, `Password must be at least ${PASSWORD_MIN_LENGTH} characters long`)
+	.max(PASSWORD_MAX_LENGTH, `Password cannot exceed ${PASSWORD_MAX_LENGTH} characters}`);
 
 export const usernameSchema = z
 	.string()

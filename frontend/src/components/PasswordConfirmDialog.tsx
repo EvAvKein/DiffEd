@@ -4,7 +4,7 @@ import Button from "#/src/components/Button";
 import PasswordInput from "./PasswordInput";
 
 type PasswordConfirmProps = {
-	onConfirm: (password: string) => void;
+	onConfirm: (password: string) => Promise<boolean>;
 	onCancel?: () => void;
 	submitButtonLabel?: string;
 	disabled?: boolean | undefined;
@@ -26,22 +26,24 @@ export default function PasswordConfirmDialog({
 	async function handleSubmit(e: React.SubmitEvent) {
 		e.preventDefault();
 		setIsLoading(true);
-		try {
-			if (!password) {
-				throw new Error("Please fill the password!");
-			}
-
-			onConfirm(password);
-		} catch (e) {
-			showToast("error", e instanceof Error ? e.message : String(e));
-		} finally {
-			setIsLoading(false);
+		if (!password) {
+			showToast("error", "No password given");
+			return false;
 		}
+
+		const result = await onConfirm(password);
+		if (result === true) {
+			setPassword("");
+			setIsConfirming(false);
+		}
+		setIsLoading(false);
+		return result;
 	}
 
 	function handleCancel(e: React.MouseEvent) {
 		e.preventDefault();
 		setIsConfirming(false);
+		setPassword("");
 		if (onCancel !== undefined) onCancel();
 	}
 
@@ -56,7 +58,11 @@ export default function PasswordConfirmDialog({
 					<span className="text-foreground-sexy text-sm mx-2">{hint}</span>
 					<PasswordInput id="password-confirm-input" value={password} onChange={(e) => setPassword(e.target.value)} />
 					<div>
-						<Button type="submit" disabled={isLoading || password.length === 0} aria-label="Accept profile updates">
+						<Button
+							type="submit"
+							disabled={disabled || isLoading || password.length === 0}
+							aria-label="Accept profile updates"
+						>
 							Confirm
 						</Button>
 						<Button type="button" onClick={(e) => handleCancel(e)} aria-label="Cancel profile updates">

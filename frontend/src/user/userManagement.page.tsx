@@ -12,6 +12,7 @@ import {useShowToast} from "#/src/stores/toastStore";
 import {useCurrentUser, useSetUser, useUpdateUser} from "#/src/stores/userStore";
 import {apiFetch} from "#/src/utils.js";
 import type {ApiResponse, User} from "#shared/src/types.js";
+import {MAX_AVATAR_SIZE, validatePassword} from "#shared/src/userValidation.js";
 
 const emailSchema = z.email();
 
@@ -21,8 +22,6 @@ type UserSettingProps = {
 };
 
 function UserSettings({user, onUpdate}: UserSettingProps) {
-	const [currentUsername, setCurrentUsername] = useState(user.username);
-	const [currentEmail, setCurrentEmail] = useState(user.email);
 	const [newUsername, setNewUsername] = useState("");
 	const [newEmail, setNewEmail] = useState("");
 	const showToast = useShowToast();
@@ -37,11 +36,11 @@ function UserSettings({user, onUpdate}: UserSettingProps) {
 
 		if (newUsername) {
 			if (newUsername.length < 3) errors.push("Username has to be at least 3 characters long");
-			if (newUsername === currentUsername) errors.push("New Username same as current username");
+			if (newUsername === user.username) errors.push("New Username same as current username");
 		}
 		if (newEmail) {
 			if (!emailSchema.safeParse(newEmail).success) errors.push("Invalid email");
-			if (newEmail == currentEmail) errors.push("error", "New email same as current email");
+			if (newEmail === user.email) errors.push("New email same as current email");
 		}
 
 		if (errors.length > 0) {
@@ -51,9 +50,11 @@ function UserSettings({user, onUpdate}: UserSettingProps) {
 		return true;
 	}
 
-	async function handleConfirmClick(password: string) {
-		if (!isValidInput()) return;
+	async function handleConfirm(password: string): Promise<boolean> {
+		if (!isValidInput()) return false;
 
+		let updatedUsername: string | undefined;
+		let updatedEmail: string | undefined;
 		try {
 			if (newUsername) {
 				const response: ApiResponse<null> = await apiFetch("/api/user", {
@@ -67,7 +68,7 @@ function UserSettings({user, onUpdate}: UserSettingProps) {
 					if (response.error.includes("password")) throw new Error(response.error);
 					showToast("error", response.error);
 				} else {
-					setCurrentUsername(newUsername);
+					updatedUsername = newUsername;
 					showToast("success", "Successfully updated username");
 				}
 			}
@@ -84,15 +85,19 @@ function UserSettings({user, onUpdate}: UserSettingProps) {
 					if (response.error.includes("password")) throw new Error(response.error);
 					showToast("error", response.error);
 				} else {
-					setCurrentEmail(newEmail);
+					updatedEmail = newEmail;
 					showToast("success", "Successfully updated email");
 				}
 			}
 
-			onUpdate(currentUsername, currentEmail);
+			if (updatedUsername !== undefined || updatedEmail !== undefined) {
+				onUpdate(updatedUsername, updatedEmail);
+			}
 			resetState();
+			return true;
 		} catch (e) {
 			showToast("error", e instanceof Error ? e.message : String(e));
+			return false;
 		}
 	}
 
@@ -103,7 +108,7 @@ function UserSettings({user, onUpdate}: UserSettingProps) {
 				<Input
 					id="username-input"
 					type="text"
-					placeholder={currentUsername}
+					placeholder={user.username}
 					value={newUsername}
 					onChange={(e) => setNewUsername(e.target.value)}
 				/>
@@ -111,14 +116,14 @@ function UserSettings({user, onUpdate}: UserSettingProps) {
 				<Input
 					id="email-input"
 					type="email"
-					placeholder={currentEmail}
+					placeholder={user.email}
 					value={newEmail}
 					onChange={(e) => setNewEmail(e.target.value)}
 				/>
 				<div>
 					<PasswordConfirmDialog
 						disabled={newEmail.length === 0 && newUsername.length === 0}
-						onConfirm={handleConfirmClick}
+						onConfirm={handleConfirm}
 						onCancel={() => {
 							resetState();
 						}}
@@ -147,6 +152,11 @@ function Password() {
 		e.preventDefault();
 		if (!newPassword || !newPassword2) {
 			return showToast("error", "Please fill all the fields!");
+		}
+
+		const passwordError = validatePassword(newPassword);
+		if (passwordError) {
+			return showToast("error", passwordError);
 		}
 
 		if (newPassword !== newPassword2) {
@@ -304,24 +314,22 @@ function Delete() {
 	const navigate = useNavigate();
 	const showToast = useShowToast();
 
-	async function deleteAccount(password: string) {
-		try {
-			const response: ApiResponse<null> = await apiFetch("/api/user", {
-				method: "DELETE",
-				headers: {"Content-Type": "application/json"},
-				credentials: "include",
-				body: JSON.stringify({password: password}),
-			});
+	async function deleteAccount(password: string): Promise<boolean> {
+		const response: ApiResponse<null> = await apiFetch("/api/user", {
+			method: "DELETE",
+			headers: {"Content-Type": "application/json"},
+			credentials: "include",
+			body: JSON.stringify({password: password}),
+		});
 
-			if (!response.ok) {
-				throw new Error(response.error);
-			}
-
-			showToast("success", "Successfully deleted user");
-			navigate("/login");
-		} catch (e) {
-			showToast("error", e instanceof Error ? e.message : String(e));
+		if (!response.ok) {
+			showToast("error", response.error);
+			return false;
 		}
+
+		showToast("success", "Successfully deleted user");
+		navigate("/login");
+		return true;
 	}
 
 	return (
@@ -357,8 +365,7 @@ function ApiKey({hasApiKey}: {hasApiKey: boolean}) {
 			}
 
 			updateUser({has_apikey: true});
-			await navigator.clipboard.writeText(response.data);
-			showToast("success", "API key created and copied to clipboard");
+			showToast("success", "API key created");
 		} catch (e) {
 			showToast("error", e instanceof Error ? e.message : String(e));
 		} finally {
@@ -450,6 +457,12 @@ function Avatar({hasAvatar}: {hasAvatar: boolean}) {
 	async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
 		const file = e.target.files?.[0];
 		if (!file) return;
+
+		if (file.size > MAX_AVATAR_SIZE) {
+			showToast("error", "Avatar must be under 1 MB");
+			if (fileInputRef.current) fileInputRef.current.value = "";
+			return;
+		}
 
 		const formData = new FormData();
 		formData.append("avatar", file);
@@ -561,7 +574,13 @@ export default function UserManagementPage() {
 			<div className="grid grid-cols-1 gap-4 w-64 mx-auto">
 				<OutlineDiv>
 					<Subheading>Account settings</Subheading>
-					<UserSettings user={currentUser} onUpdate={(username, email) => updateUser({username, email})} />
+					<UserSettings
+						user={currentUser}
+						onUpdate={(username, email) => {
+							if (username !== undefined) updateUser({username});
+							if (email !== undefined) updateUser({email});
+						}}
+					/>
 					<Password />
 					<GithubLink githubLinked={!!currentUser.github_linked} />
 				</OutlineDiv>

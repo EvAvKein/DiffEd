@@ -7,6 +7,7 @@ import type {SubmitEvent} from "react";
 import type {SigningUser, ApiResponse, User, PendingGithubPayload} from "#shared/src/types";
 import {apiFetch, getSession} from "#/src/utils.ts";
 import {z} from "zod";
+import {validatePassword} from "#shared/src/userValidation.js";
 import {useShowToast} from "#/src/stores/toastStore";
 import {useSetUser} from "#/src/stores/userStore.ts";
 
@@ -61,6 +62,11 @@ export default function SignupPage() {
 			const result = emailSchema.safeParse(email);
 			if (!result.success) {
 				throw new Error("Invalid email");
+			}
+
+			const passwordError = validatePassword(password);
+			if (passwordError) {
+				throw new Error(passwordError);
 			}
 
 			if (password !== password2) {
