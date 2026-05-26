@@ -63,5 +63,5 @@ app.get("/*splat", function (_, response) {
 });
 
 server.listen(3000, () => {
-	timestampedLog("Server online at http://localhost:8080");
+	timestampedLog("Server online");
 });

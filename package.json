@@ -2,8 +2,7 @@
 	"name": "transcendence",
 	"version": "0.0.0",
 	"scripts": {
-		"up": "docker compose up --build",
-		"start": "docker compose start",
+		"up": "docker compose -f compose.yaml -f compose.prodOverride.yaml up --build",
 		"dev": "docker compose -f compose.yaml -f compose.devOverride.yaml up --build --force-recreate",
 		"test": "docker compose -f compose.jest.yaml up --build --force-recreate",
 		"SA": "docker compose -f compose.staticAnalysis.yaml up --build --force-recreate",
