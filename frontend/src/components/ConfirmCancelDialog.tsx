@@ -1,18 +1,18 @@
 import Button from "#/src/components/Button";
 
-type AcceptCancelProps = {
+type ConfirmCancelProps = {
 	textToShow?: string;
-	onAccept: () => void;
+	onConfirm: () => void;
 	onCancel: () => void;
 };
 
-export default function AcceptCancelDialog({textToShow, onAccept, onCancel}: AcceptCancelProps) {
+export default function ConfirmCancelDialog({textToShow, onConfirm, onCancel}: ConfirmCancelProps) {
 	return (
 		<div>
 			<span className="text-error-accent">{textToShow}</span>
 			<div className="flex justify-center">
-				<Button onClick={onAccept} aria-label="Accept changes">
-					Accept{" "}
+				<Button onClick={onConfirm} aria-label="Confirm changes">
+					Confirm{" "}
 				</Button>
 				<Button onClick={onCancel} aria-label="Cancel changes">
 					Cancel{" "}

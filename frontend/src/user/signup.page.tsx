@@ -10,6 +10,9 @@ import {z} from "zod";
 import {validatePassword} from "#shared/src/userValidation.js";
 import {useShowToast} from "#/src/stores/toastStore";
 import {useSetUser} from "#/src/stores/userStore.ts";
+import Hints from "../components/Hints";
+import PasswordInput from "../components/PasswordInput";
+import Subheading from "../components/Subheading";
 
 const emailSchema = z.email();
 
@@ -139,52 +142,30 @@ export default function SignupPage() {
 	}
 
 	return (
-		<div>
-			<div>Welcome to the signup page</div>
-			<form onSubmit={signup}>
-				<div>
-					<label>
-						Username:
-						<Input placeholder="username" value={username} onChange={(e) => setUserName(e.target.value)} />
-					</label>
-				</div>
-				<div>
-					<label>
-						Email:
-						<Input placeholder="email" value={email} onChange={(e) => setUserEmail(e.target.value)} />
-					</label>
-				</div>
-				<div>
-					<label>
-						Password:
-						<Input
-							placeholder="password"
-							type="password"
-							value={password}
-							onChange={(e) => setUserPassword(e.target.value)}
-						/>
-					</label>
-				</div>
-				<div>
-					<label>
-						Repeat password:
-						<Input
-							placeholder="repeat password"
-							type="password"
-							value={password2}
-							onChange={(e) => setUserPassword2(e.target.value)}
-						/>
-					</label>
-				</div>
-				<div>
-					<Button type="submit">Sign Up</Button>
-				</div>
+		<div className="flex flex-col items-center justify-center">
+			<Subheading>Create a new account</Subheading>
+			<form onSubmit={signup} className="flex flex-col items-center justify-center">
+				<label htmlFor="username-input">Username</label>
+				<Hints id="username-hints" hints={["Minimum length 3", "Maximum length 20"]} />
+				<Input
+					id="username-input"
+					placeholder="username"
+					value={username}
+					onChange={(e) => setUserName(e.target.value)}
+				/>
+
+				<label htmlFor="email-input">Email</label>
+				<Input id="email-input" placeholder="email" value={email} onChange={(e) => setUserEmail(e.target.value)} />
+
+				<PasswordInput showHints={true} value={password} onChange={(e) => setUserPassword(e.target.value)} />
+
+				<PasswordInput label="Repeat password" value={password2} onChange={(e) => setUserPassword2(e.target.value)} />
+
+				<Button type="submit">Sign Up</Button>
 			</form>
-			<div>
-				<a href="/api/auth/github?action=signup">
-					<Button type="button">Sign up with GitHub</Button>
-				</a>
-			</div>
+			<a href="/api/auth/github?action=signup">
+				<Button type="button">Sign up with GitHub</Button>
+			</a>
 			<div>
 				Already have an account? Go to&nbsp;
 				<button

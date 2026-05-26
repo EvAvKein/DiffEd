@@ -6,13 +6,15 @@ import Button from "#/src/components/Button";
 import Input from "#/src/components/Input";
 import Subheading from "../components/Subheading";
 import OutlineDiv from "#/src/components/OutlineDiv";
-import AcceptCancelDialog from "#/src/components/AcceptCancelDialog";
+import ConfirmCancelDialog from "#/src/components/ConfirmCancelDialog";
 import PasswordConfirmDialog from "#/src/components/PasswordConfirmDialog";
 import {useShowToast} from "#/src/stores/toastStore";
 import {useCurrentUser, useSetUser, useUpdateUser} from "#/src/stores/userStore";
 import {apiFetch} from "#/src/utils.js";
 import type {ApiResponse, User} from "#shared/src/types.js";
 import {MAX_AVATAR_SIZE, validatePassword} from "#shared/src/userValidation.js";
+import Hints from "../components/Hints";
+import PasswordInput from "../components/PasswordInput";
 
 const emailSchema = z.email();
 
@@ -105,6 +107,7 @@ function UserSettings({user, onUpdate}: UserSettingProps) {
 		<>
 			<div className="flex flex-col justify-center items-center">
 				<label htmlFor="username-input">Username</label>
+				<Hints id="username-hints" hints={["Minimum length 3", "Maximum length 20"]} />
 				<Input
 					id="username-input"
 					type="text"
@@ -186,27 +189,22 @@ function Password() {
 		<div aria-live="polite" className="my-2">
 			{isEditing ? (
 				<form onSubmit={(e) => handleSubmit(e)} className="flex flex-col items-center justify-center">
-					<label htmlFor="new-password">New password</label>
-					<Input
+					<PasswordInput
+						label="New password"
+						showHints={true}
 						id="new-password"
-						placeholder="**************"
-						type="password"
 						value={newPassword}
 						onChange={(e) => setNewPassword(e.target.value)}
 					/>
-					<label htmlFor="new-password-again">New password, again</label>
-					<Input
+					<PasswordInput
+						label="Repeat new password"
 						id="new-password-again"
-						placeholder="**************"
-						type="password"
 						value={newPassword2}
 						onChange={(e) => setNewPassword2(e.target.value)}
 					/>
-					<label htmlFor="old-password">Old password</label>
-					<Input
+					<PasswordInput
+						label="Old password"
 						id="old-password"
-						placeholder="**************"
-						type="password"
 						value={oldPassword}
 						onChange={(e) => setOldPassword(e.target.value)}
 					/>
@@ -431,9 +429,9 @@ function ApiKey({hasApiKey}: {hasApiKey: boolean}) {
 			</Button>
 			<div aria-live="polite">
 				{showDeleteConfirm ? (
-					<AcceptCancelDialog
+					<ConfirmCancelDialog
 						textToShow="Delete your current key?"
-						onAccept={deleteApiKey}
+						onConfirm={deleteApiKey}
 						onCancel={() => setAcceptDelete(false)}
 					/>
 				) : (
@@ -534,9 +532,9 @@ function Avatar({hasAvatar}: {hasAvatar: boolean}) {
 						Delete avatar
 					</Button>
 				) : hasAvatar ? (
-					<AcceptCancelDialog
+					<ConfirmCancelDialog
 						textToShow="Delete your avatar?"
-						onAccept={handleDelete}
+						onConfirm={handleDelete}
 						onCancel={() => setAcceptDelete(false)}
 					/>
 				) : null}

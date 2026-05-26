@@ -68,7 +68,7 @@ export function UserTopBar() {
 			<div className="flex items-center gap-2">
 				<TopBarLink to="/account">{currentUser ? currentUser.username : "Account"}</TopBarLink>
 				<Button type="button" onClick={logout}>
-					Logout
+					Log Out
 				</Button>
 			</div>
 		</nav>

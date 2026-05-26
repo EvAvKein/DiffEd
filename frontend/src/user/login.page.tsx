@@ -1,5 +1,6 @@
 import Button from "../components/Button";
 import Input from "../components/Input";
+import PasswordInput from "../components/PasswordInput";
 import {useState, useEffect} from "react";
 import type {SubmitEvent} from "react";
 import {useNavigate, useSearchParams, useLocation} from "react-router";
@@ -72,16 +73,7 @@ export default function LoginPage() {
 					onChange={(e) => setLoginIdentifier(e.target.value)}
 					autoFocus={true}
 				/>
-				<label htmlFor="password" className="text-right">
-					Password
-				</label>
-				<Input
-					id="password"
-					placeholder="********"
-					type="password"
-					value={loginPassword}
-					onChange={(e) => setLoginPassword(e.target.value)}
-				/>
+				<PasswordInput id="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} />
 				<Button
 					type="submit"
 					className="col-span-2 mx-auto"

@@ -2,6 +2,7 @@ import {useState, type JSX} from "react";
 import Button from "#/src/components/Button";
 import {useShowToast} from "#/src/stores/toastStore";
 import Input from "#/src/components/Input";
+import Hints from "../components/Hints";
 import {apiFetch} from "#/src/utils.ts";
 import {validateFileNameLen, MAX_FILENAME_LEN} from "#shared/src/fileValidation.ts";
 
@@ -12,14 +13,12 @@ type NewFileProps = {
 
 function NewFile({onFileCreate, refreshFileList}: NewFileProps): JSX.Element {
 	const [newFileName, setNewFileName] = useState<string>("");
-	const [touched, setTouched] = useState<boolean>(false);
-	const fileNameError: string | null = newFileName.length > 0 ? validateFileNameLen(newFileName) : null;
 	const showToast = useShowToast();
 
 	async function openNewFile() {
-		if (!newFileName || !newFileName.trim().length) {
-			showToast("error", "Filename can't be empty");
-			return;
+		const fileNameError = validateFileNameLen(newFileName);
+		if (fileNameError) {
+			return showToast("error", fileNameError);
 		}
 
 		const formData = new FormData();
@@ -62,30 +61,19 @@ function NewFile({onFileCreate, refreshFileList}: NewFileProps): JSX.Element {
 					openNewFile();
 				}}
 			>
-				<ul id="filename-hints" className="text-xs text-foreground-sexy list-disc flex flex-col w-fit mx-auto">
-					<li>Maximum {MAX_FILENAME_LEN} characters</li>
-					<li>At least one non-whitespace character</li>
-				</ul>
-				<div
-					id="filename-error"
-					aria-live="polite"
-					aria-atomic="true"
-					className="flex justify-center text-sm text-error"
-				>
-					{fileNameError}
-				</div>
-				<label htmlFor="fileNameInput">New File</label>
+				<Hints
+					id="filename-hints"
+					hints={[`Maximum ${MAX_FILENAME_LEN} characters`, "At least one non-whitespace character"]}
+				/>
+				<label htmlFor="file-name-input">New File</label>
 				<Input
-					id="fileNameInput"
+					id="file-name-input"
 					value={newFileName}
 					aria-describedby="filename-hints"
-					aria-invalid={touched && !!fileNameError}
-					aria-required={true}
 					placeholder="filename"
 					onChange={(event) => setNewFileName(event.target.value)}
-					onBlur={() => setTouched(true)}
 				/>
-				<Button type="submit" disabled={!!fileNameError || newFileName.length === 0}>
+				<Button type="submit" disabled={newFileName.length === 0}>
 					Create
 				</Button>
 			</form>

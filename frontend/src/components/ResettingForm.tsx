@@ -7,14 +7,12 @@ type resettingFormProps = {
 	onSubmit: (value: string) => Promise<void>;
 	inputLabel: string;
 	buttonLabel?: string;
-	validation?: (value: string) => string | null;
 };
 
-function ResettingForm({initialValue, onSubmit, inputLabel, buttonLabel, validation}: resettingFormProps) {
+function ResettingForm({initialValue, onSubmit, inputLabel, buttonLabel}: resettingFormProps) {
 	const [draft, setDraft] = useState<string>(initialValue);
-	const validationError = validation !== undefined ? validation(draft) : null;
 
-	const buttonDisabled = initialValue === draft || (validation !== undefined && validationError !== null);
+	const buttonDisabled = initialValue === draft || draft.length === 0;
 
 	useEffect(() => setDraft(initialValue), [initialValue]);
 
@@ -30,14 +28,11 @@ function ResettingForm({initialValue, onSubmit, inputLabel, buttonLabel, validat
 
 	return (
 		<form className="flex gap-1 items-center" onSubmit={(e) => handleSubmit(e)} onBlur={(e) => handleBlur(e)}>
-			<label>
-				{inputLabel}
-				<Input type="text" value={draft} onChange={(e) => setDraft(e.target.value)} />
-			</label>
+			<label htmlFor="resetting-form">{inputLabel}</label>
+			<Input id="resetting-form" type="text" value={draft} onChange={(e) => setDraft(e.target.value)} />
 			<Button type="submit" disabled={buttonDisabled}>
 				{buttonLabel ?? "Submit"}
 			</Button>
-			{validationError ? <div className="text-sm text-error-accent">{validationError}</div> : null}
 		</form>
 	);
 }

@@ -209,7 +209,7 @@ erDiagram
 
 With the `user_session` table being fully managed by the package `connect-pg-simple`, this table has no foreign key to `users`: The relation between sessions and users is established via a `userId` stored inside the `sess` JSON.
 
-User Avatar images are stored in a local volume, that the users `avatar_filename` field points to. 
+User Avatar images are stored in a local volume, that the users `avatar_filename` field points to.
 
 ## Features List
 

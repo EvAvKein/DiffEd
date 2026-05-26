@@ -245,6 +245,12 @@ export default function Editor({connection, myOwnerId, initialMembers, onRepickF
 
 	async function handleRename(name: string): Promise<void> {
 		if (!connection) return;
+
+		const fileNameError = validateFileNameLen(name);
+		if (fileNameError !== null) {
+			return showToast("error", fileNameError);
+		}
+
 		try {
 			const response = await pushFileName(connection, name);
 			setFileName(response.name);
@@ -262,17 +268,12 @@ export default function Editor({connection, myOwnerId, initialMembers, onRepickF
 				onSelect={setSelectedPeerId}
 			/>
 			<div className="flex items-center justify-between p-1">
-				<ResettingForm
-					initialValue={fileName}
-					onSubmit={handleRename}
-					inputLabel="Filename"
-					buttonLabel="Rename"
-					validation={validateFileNameLen}
-				/>
+				<ResettingForm initialValue={fileName} onSubmit={handleRename} inputLabel="Filename" buttonLabel="Rename" />
 				<div className="flex items-center">
 					<label className="text-sm">
 						Syntax Highlighting
 						<select
+							id="syntax-highlighting-dropdown"
 							className="m-1 px-1 border-2 border-surface bg-canvas text-foreground"
 							value={langSelected ?? ""}
 							onChange={(e) => setLangSelected(e.target.value || null)}
