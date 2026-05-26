@@ -159,6 +159,8 @@ The team works in 2-week sprints, aiming towards code-named release-based versio
 - SocketIO: WebSocket server library
 - Postgres: ACID-compliant relational database
 - express-session + connect-pg-simple: Server-side session management with Postgres integration
+- express-rate-limit: Rate-limiting middleware for endpoints
+- helmet: sets response HTTP headers
 - PassportJS: Authentication middleware (used for GitHub OAuth)
 - Argon2id (`argon2`): Password hashing
 - Multer: Multipart file upload handling
@@ -205,7 +207,9 @@ erDiagram
     }
 ```
 
-With the `user_session` table being fully managed by the package `connect-pg-simple`, this table has no foreign key to `users`: The relation between sessions and uses is established via a `userId` stored inside the `sess` JSON.
+With the `user_session` table being fully managed by the package `connect-pg-simple`, this table has no foreign key to `users`: The relation between sessions and users is established via a `userId` stored inside the `sess` JSON.
+
+User Avatar images are stored in a local volume, that the users `avatar_filename` field points to. 
 
 ## Features List
 
@@ -338,7 +342,10 @@ This project implements **14 points** worth of modules. **Major** modules are wo
 
 **Modules:** Public API. Contributed to Support for two additional browsers.
 
-**Challenges faced:** _To be added by the team._
+**Challenges faced:**
+
+- Making passport.js to work. Eventually Eve made this work for OAuth.
+- Struggling with Typescript.
 
 ### Jukka Aho ([EyzeCOLD](https://github.com/EyzeCOLD))
 
