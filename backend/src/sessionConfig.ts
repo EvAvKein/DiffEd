@@ -11,6 +11,7 @@ declare module "express-session" {
 }
 
 const pgSession = connectPgSimple(session);
+const isProduction = process.env.NODE_ENV === "production";
 
 const sessionConfig = session({
 	store: new pgSession({
@@ -23,7 +24,7 @@ const sessionConfig = session({
 	cookie: {
 		maxAge: 24 * 60 * 60 * 1000, // 1 day
 		httpOnly: true,
-		//secure: true, //for https
+		secure: isProduction, //for https
 	},
 });
 

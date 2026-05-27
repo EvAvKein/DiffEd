@@ -10,7 +10,10 @@ import userQueryService from "#/src/queries/users.js";
 const limiter = rateLimit({
 	windowMs: 15 * 60 * 1000, // 15 min (how long to remember requests for)
 	limit: 5, // 5 attempts per 15 min
-	message: "Too many login attempts, please try again later.",
+	handler: (req, res) => {
+		console.log(req.headers);
+		res.status(429).json({ok: false, error: "Too many login attempts, please try again later."});
+	},
 });
 
 function loginUser(app: Express) {
