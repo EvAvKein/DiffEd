@@ -1,5 +1,6 @@
 export const PASSWORD_MIN_LENGTH = 14;
 export const PASSWORD_MAX_LENGTH = 128;
+export const EMAIL_MAX_LENGTH = 120;
 export const MAX_AVATAR_SIZE = 1024 * 1024; // 1 MiB
 
 export function validatePassword(password: string): string | null {

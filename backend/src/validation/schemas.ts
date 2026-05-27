@@ -1,6 +1,6 @@
 import {type UserFile, type SigningUser} from "#shared/src/types.js";
 import {MAX_FILENAME_LEN} from "#shared/src/fileValidation.js";
-import {PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH} from "#shared/src/userValidation.js";
+import {PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH, EMAIL_MAX_LENGTH} from "#shared/src/userValidation.js";
 import {z, type ZodType} from "zod";
 
 const USERNAME_MIN_LENGTH = 3;
@@ -17,11 +17,11 @@ export const usernameSchema = z
 	.max(USERNAME_MAX_LENGTH, `Username can't be over ${USERNAME_MAX_LENGTH} characters long`)
 	.regex(/^[a-zA-Z0-9_]+$/, "Username must contain only small/capital letter, numbers or underscore");
 
-export const emailSchema = z.email();
+export const emailSchema = z.email().max(EMAIL_MAX_LENGTH, `Email cannot exceed ${EMAIL_MAX_LENGTH} characters`);
 
 export const SignupSchema = z.object({
 	username: usernameSchema,
-	email: z.email(),
+	email: emailSchema,
 	password: passwordSchema,
 }) satisfies ZodType<SigningUser>;
 

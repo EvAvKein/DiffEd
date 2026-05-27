@@ -7,7 +7,7 @@ import type {SubmitEvent} from "react";
 import type {SigningUser, ApiResponse, User, PendingGithubPayload} from "#shared/src/types";
 import {apiFetch, getSession} from "#/src/utils.ts";
 import {z} from "zod";
-import {validatePassword} from "#shared/src/userValidation.js";
+import {validatePassword, EMAIL_MAX_LENGTH} from "#shared/src/userValidation.js";
 import {useShowToast} from "#/src/stores/toastStore";
 import {useSetUser} from "#/src/stores/userStore.ts";
 import Hints from "../components/Hints";
@@ -155,7 +155,13 @@ export default function SignupPage() {
 				/>
 
 				<label htmlFor="email-input">Email</label>
-				<Input id="email-input" placeholder="email" value={email} onChange={(e) => setUserEmail(e.target.value)} />
+				<Input
+					id="email-input"
+					placeholder="email"
+					value={email}
+					maxLength={EMAIL_MAX_LENGTH}
+					onChange={(e) => setUserEmail(e.target.value)}
+				/>
 
 				<PasswordInput showHints={true} value={password} onChange={(e) => setUserPassword(e.target.value)} />
 

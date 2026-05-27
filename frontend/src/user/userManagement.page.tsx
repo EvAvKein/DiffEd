@@ -12,7 +12,7 @@ import {useShowToast} from "#/src/stores/toastStore";
 import {useCurrentUser, useSetUser, useUpdateUser} from "#/src/stores/userStore";
 import {apiFetch} from "#/src/utils.js";
 import type {ApiResponse, User} from "#shared/src/types.js";
-import {MAX_AVATAR_SIZE, validatePassword} from "#shared/src/userValidation.js";
+import {MAX_AVATAR_SIZE, EMAIL_MAX_LENGTH, validatePassword} from "#shared/src/userValidation.js";
 import Hints from "../components/Hints";
 import PasswordInput from "../components/PasswordInput";
 
@@ -121,6 +121,7 @@ function UserSettings({user, onUpdate}: UserSettingProps) {
 					type="email"
 					placeholder={user.email}
 					value={newEmail}
+					maxLength={EMAIL_MAX_LENGTH}
 					onChange={(e) => setNewEmail(e.target.value)}
 				/>
 				<div>
