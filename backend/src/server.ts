@@ -20,7 +20,7 @@ import "./passportConfig.js";
 import {initCollabSocket} from "./endpoints/collabSocket.js";
 
 const app = express();
-app.set("trust proxy", true); // Required so Express reads the Host header forwarded by Nginx, needed for passport-oauth2 relative callbackURL resolution
+app.set("trust proxy", 1); // Required so Express reads the Host header forwarded by Nginx, needed for passport-oauth2 relative callbackURL resolution
 const server = createServer(app);
 const sockets = new Server(server, {cors: {origin: "*"}});
 const collabApi = initCollabSocket(sockets, postgres);
@@ -29,7 +29,15 @@ app.use(sessionConfig);
 app.use(passport.initialize());
 app.use(express.static("../frontend/dist"));
 app.use(express.json());
-app.use(helmetSecurity());
+app.use(
+	helmetSecurity({
+		contentSecurityPolicy: {
+			directives: {
+				...(process.env.NODE_ENV === "development" && {upgradeInsecureRequests: null}),
+			},
+		},
+	}),
+);
 
 Endpoints.getFiles(app);
 Endpoints.getFileById(app);

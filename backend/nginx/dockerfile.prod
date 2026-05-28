@@ -7,4 +7,6 @@ RUN apk add --no-cache openssl && \
 		-out /etc/nginx/ssl/public_certificate.crt \
 		-subj "/CN=localhost"
 
-EXPOSE 80 443
+COPY ./backend/nginx/nginx.conf.template /etc/nginx/nginx.conf.template
+
+CMD ["/bin/sh", "-c", "envsubst '${HTTP_PORT} ${HTTPS_PORT}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"]

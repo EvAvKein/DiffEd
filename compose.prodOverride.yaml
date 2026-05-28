@@ -4,8 +4,8 @@ services:
     build:
       context: ./
       dockerfile: ./backend/nginx/dockerfile.prod
-    volumes:
-      - ./backend/nginx/prod.nginx.conf:/etc/nginx/nginx.conf
     ports: !override
-      - 8080:80
-      - 8443:443
+      - "${HTTP_PORT}:${HTTP_PORT}"
+      - "${HTTPS_PORT}:${HTTPS_PORT}"
+    env_file:
+      - ./backend/.env # create before deployment

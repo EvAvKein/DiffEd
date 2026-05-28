@@ -1,23 +1,13 @@
 import type {Express, Request, Response} from "express";
 import argon2 from "argon2";
-import rateLimit from "express-rate-limit";
 import {timestampedLog} from "#/src/logging.js";
 import {ApiResponse, User} from "#shared/src/types.js";
 import {isDbError} from "#/src/utils.js";
 import {requireAuth} from "#/src/middleware.js";
 import userQueryService from "#/src/queries/users.js";
 
-const limiter = rateLimit({
-	windowMs: 15 * 60 * 1000, // 15 min (how long to remember requests for)
-	limit: 5, // 5 attempts per 15 min
-	handler: (req, res) => {
-		console.log(req.headers);
-		res.status(429).json({ok: false, error: "Too many login attempts, please try again later."});
-	},
-});
-
 function loginUser(app: Express) {
-	app.post("/api/session", limiter, async (req: Request, res: Response<ApiResponse<User>>) => {
+	app.post("/api/session", async (req: Request, res: Response<ApiResponse<User>>) => {
 		timestampedLog(`REQUEST >>> ${req.method} ${req.url}`);
 
 		const {loginIdentifier, password} = req.body;

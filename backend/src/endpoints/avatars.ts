@@ -9,7 +9,7 @@ import {timestampedLog} from "#/src/logging.js";
 import {requireAuthOrApiKey, userIdAfterAuth, type AuthRequest} from "#/src/middleware.js";
 import userQueryService from "#/src/queries/users.js";
 
-const AVATAR_DIR = path.resolve(process.cwd(), "src/private/avatars");
+const AVATAR_DIR = path.resolve("/data/avatars");
 const DEFAULT_AVATAR = "default.jpg";
 
 //all the users share the same storage, since there's only 1 image per user

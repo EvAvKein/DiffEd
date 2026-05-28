@@ -557,17 +557,16 @@ export default function UserManagementPage() {
 	const navigate = useNavigate();
 
 	useEffect(() => {
-		if (currentUser) return;
-
 		apiFetch<User>("/api/user", {method: "GET", credentials: "include"}).then((response) => {
 			if (!response.ok) {
 				showToast("error", `Error fetching user data: ${response.error}`);
+				navigate("/login");
 				return;
 			}
 			setUser(response.data);
 			setIsLoading(false);
 		});
-	}, [navigate]);
+	}, []);
 
 	return isLoading || !currentUser ? (
 		<div>Loading...</div>

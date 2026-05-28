@@ -15,7 +15,7 @@
 
 Using DiffEd's API is easy:
 
-1. Get your personal api key on your [Account page](http://localhost:8080/account).
+1. Get your personal api key on your Account page.
 2. From your desired application/program, send a request to endpoint with header `x-api-key: your_api_key`.
 
 - On success you will be returned a json object `{ ok: true, data: if_any }`
@@ -23,11 +23,11 @@ Using DiffEd's API is easy:
 
 For more information about API keys, see [How to get an API key?](#how-to-get-an-api-key). For full usage, see [Available Endpoints](#available-endpoints).
 
-**Note:** Since the page is currently only available to run locally and not on the public internet, you need to use `http://localhost:8080/endpoint`.
+**Note:** Since the page is currently only available to run locally and not on the public internet, you need to use `<HOSTNAME>[:PORT]/endpoint`.
 
 ## How to get an API key?
 
-- To get your personal API key, go to your [Account page](http://localhost:8080/account) and create a new API key under section "API".
+- To get your personal API key, go to your Account page and create a new API key under section "API".
 - Once you've created an API key, it's available to you until you decide to regenerate it, delete it, or your account is deleted.
   - Hint: You don't need to remember the key. You can copy it by using the **_Copy current API key_** button on your Account page.
 - You can always regenerate a new api key with the **_Create new API key_** button, but note that the old one becomes invalid and cannot be used anymore.
@@ -52,9 +52,9 @@ console.log(response.data); // logs your api key
 ```
 
 ```shell
-curl -X GET -H "x-api-key: invalid_api_key" http://localhost:8080/api/user/api-key
+curl -X GET -H "x-api-key: invalid_api_key" <HOSTNAME>[:PORT]/api/user/api-key
 {"ok":false,"error":"Unauthorized"}
-curl -X GET -H "x-api-key: valid_api_key" http://localhost:8080/api/user/api-key
+curl -X GET -H "x-api-key: valid_api_key" <HOSTNAME>[:PORT]/api/user/api-key
 {"ok":true,"data":"valid_api_key"}
 ```
 
@@ -73,7 +73,7 @@ console.log(response.data); // logs your new api key
 ```
 
 ```shell
-curl -X PATCH -H "x-api-key: your_api_key" http://localhost:8080/api/user/api-key
+curl -X PATCH -H "x-api-key: your_api_key" <HOSTNAME>[:PORT]/api/user/api-key
 {"ok":true,"data":"new-uuid-api-key"}
 ```
 
@@ -91,7 +91,7 @@ fetch("/api/user/api-key", {method: "DELETE", headers: {"x-api-key": "your_api_k
 ```
 
 ```shell
-curl -X DELETE -H "x-api-key: your_api_key" http://localhost:8080/api/user/api-key
+curl -X DELETE -H "x-api-key: your_api_key" <HOSTNAME>[:PORT]/api/user/api-key
 {"ok":true,"data":null}
 ```
 
@@ -116,7 +116,7 @@ console.log(response.data); // logs your account info
 ```
 
 ```shell
-curl -X GET -H "x-api-key: your_api_key" http://localhost:8080/api/user
+curl -X GET -H "x-api-key: your_api_key" <HOSTNAME>[:PORT]/api/user
 {"ok":true,"data":{"id":1,"username":"jane","email":"jane@example.com","github_linked":false,"has_apikey":true,"vim_bindings":false}}
 ```
 
@@ -149,7 +149,7 @@ fetch("/api/user", {
 ```shell
 curl -X PATCH -H "x-api-key: your_api_key" -H "Content-Type: application/json" \
   -d '{"email":"new@example.com","password":"current_password"}' \
-  http://localhost:8080/api/user
+  <HOSTNAME>[:PORT]/api/user
 {"ok":true,"data":null}
 ```
 
@@ -176,7 +176,7 @@ fetch("/api/user", {
 
 ```shell
 curl -X DELETE -H "x-api-key: your_api_key" -H "Content-Type: application/json" \
-  -d '{"password":"your_password"}' http://localhost:8080/api/user
+  -d '{"password":"your_password"}' <HOSTNAME>[:PORT]/api/user
 {"ok":true,"data":null}
 ```
 
@@ -195,7 +195,7 @@ fetch("/api/auth/github/link", {method: "DELETE", headers: {"x-api-key": "your_a
 ```
 
 ```shell
-curl -X DELETE -H "x-api-key: your_api_key" http://localhost:8080/api/auth/github/link
+curl -X DELETE -H "x-api-key: your_api_key" <HOSTNAME>[:PORT]/api/auth/github/link
 {"ok":true,"data":null}
 ```
 
@@ -215,7 +215,7 @@ const response = fetch("/api/user/avatar", {method: "GET", headers: {"x-api-key"
 ```
 
 ```shell
-curl -H "x-api-key: your_api_key" http://localhost:8080/api/user/avatar --output avatar.jpg
+curl -H "x-api-key: your_api_key" <HOSTNAME>[:PORT]/api/user/avatar --output avatar.jpg
 ```
 
 #### Update avatar
@@ -238,7 +238,7 @@ fetch("/api/user/avatar", {method: "PATCH", headers: {"x-api-key": "your_api_key
 ```
 
 ```shell
-curl -X PATCH -H "x-api-key: your_api_key" -F "avatar=@picture.png" http://localhost:8080/api/user/avatar
+curl -X PATCH -H "x-api-key: your_api_key" -F "avatar=@picture.png" <HOSTNAME>[:PORT]/api/user/avatar
 {"ok":true,"data":null}
 ```
 
@@ -257,7 +257,7 @@ fetch("/api/user/avatar", {method: "DELETE", headers: {"x-api-key": "your_api_ke
 ```
 
 ```shell
-curl -X DELETE -H "x-api-key: your_api_key" http://localhost:8080/api/user/avatar
+curl -X DELETE -H "x-api-key: your_api_key" <HOSTNAME>[:PORT]/api/user/avatar
 {"ok":true,"data":null}
 ```
 
@@ -279,7 +279,7 @@ console.log(response.data); // logs your files
 ```
 
 ```shell
-curl -X GET -H "x-api-key: your_api_key" http://localhost:8080/api/files
+curl -X GET -H "x-api-key: your_api_key" <HOSTNAME>[:PORT]/api/files
 {"ok":true,"data":[{"id":"a1b2c3d4-...","name":"hello.txt"}]}
 ```
 
@@ -304,7 +304,7 @@ console.log(response.data); // logs the file
 ```
 
 ```shell
-curl -X GET -H "x-api-key: your_api_key" http://localhost:8080/api/files/a1b2c3d4-...
+curl -X GET -H "x-api-key: your_api_key" <HOSTNAME>[:PORT]/api/files/a1b2c3d4-...
 {"ok":true,"data":{"id":"a1b2c3d4-...","name":"hello.txt","content":"hi there"}}
 ```
 
@@ -329,7 +329,7 @@ fetch("/api/files", {method: "POST", headers: {"x-api-key": "your_api_key"}, bod
 ```
 
 ```shell
-curl -X POST -H "x-api-key: your_api_key" -F "file=@hello.txt" http://localhost:8080/api/files
+curl -X POST -H "x-api-key: your_api_key" -F "file=@hello.txt" <HOSTNAME>[:PORT]/api/files
 {"ok":true,"data":"a1b2c3d4-..."}
 ```
 
@@ -351,7 +351,7 @@ fetch("/api/files/a1b2c3d4-...", {method: "DELETE", headers: {"x-api-key": "your
 ```
 
 ```shell
-curl -X DELETE -H "x-api-key: your_api_key" http://localhost:8080/api/files/a1b2c3d4-...
+curl -X DELETE -H "x-api-key: your_api_key" <HOSTNAME>[:PORT]/api/files/a1b2c3d4-...
 {"ok":true,"data":null}
 ```
 
@@ -381,7 +381,7 @@ console.log(response.data); // logs { workspaceId: "..." }
 
 ```shell
 curl -X POST -H "x-api-key: your_api_key" -H "Content-Type: application/json" \
-  -d '{"fileId":"a1b2c3d4-..."}' http://localhost:8080/api/workspace
+  -d '{"fileId":"a1b2c3d4-..."}' <HOSTNAME>[:PORT]/api/workspace
 {"ok":true,"data":{"workspaceId":"f5e6d7c8-..."}}
 ```
 
@@ -407,6 +407,6 @@ console.log(response.data); // logs the workspace info
 ```
 
 ```shell
-curl -X GET -H "x-api-key: your_api_key" http://localhost:8080/api/workspace/f5e6d7c8-...
+curl -X GET -H "x-api-key: your_api_key" <HOSTNAME>[:PORT]/api/workspace/f5e6d7c8-...
 {"ok":true,"data":{"id":"f5e6d7c8-...","members":[{"id":1,"username":"jane"}]}}
 ```

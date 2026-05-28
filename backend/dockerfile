@@ -26,7 +26,8 @@ RUN npm install --omit=dev
 
 COPY /backend/sql/ /backend/sql/
 COPY /backend/.env /backend/.env
+RUN mkdir -p /data/avatars
+COPY /backend/src/defaultAvatar.jpg /data/avatars/default.jpg
 
 # HOST
-EXPOSE 3000
 CMD ["npm", "run", "server"]
