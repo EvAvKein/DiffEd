@@ -6,6 +6,7 @@ import type {
 	CollabRequestPayload,
 	CollabResponse,
 	DocumentResponse,
+	EditorInvalidatedEvent,
 	ErrorResponse,
 	MembersChangedEvent,
 	NameUpdateResponse,
@@ -23,6 +24,7 @@ type PendingRequest = {
 };
 
 export type MembersHandler = (event: MembersChangedEvent) => void;
+export type EditorInvalidatedHandler = (event: EditorInvalidatedEvent) => void;
 
 /** Wrapper for socket.io connection to communicate with our collab server */
 export class CollabConnection {
@@ -32,6 +34,7 @@ export class CollabConnection {
 	private pendingRequests = new Map<number, PendingRequest>();
 	private membersHandlers = new Set<MembersHandler>();
 	private setConnected: (connected: boolean) => void;
+	private editorInvalidatedHandlers = new Set<EditorInvalidatedHandler>();
 
 	constructor(workspaceId: string, setConnected: (connected: boolean) => void) {
 		this.workspaceId = workspaceId;
@@ -78,6 +81,12 @@ export class CollabConnection {
 
 		this.socket.on("connect", () => {
 			this.setConnected(true);
+		});
+
+		this.socket.on("editorInvalidated", (event: EditorInvalidatedEvent) => {
+			for (const handler of this.editorInvalidatedHandlers) {
+				handler(event);
+			}
 		});
 
 		this.socket.on("connect_error", (error) => {
@@ -171,9 +180,18 @@ export class CollabConnection {
 		});
 	}
 
+	subscribeEditorInvalidated(handler: EditorInvalidatedHandler): () => void {
+		this.getOrCreateSocket();
+		this.editorInvalidatedHandlers.add(handler);
+		return () => {
+			this.editorInvalidatedHandlers.delete(handler);
+		};
+	}
+
 	disconnect(): void {
 		this.rejectAllPending(new Error("Collab connection closed"));
 		this.membersHandlers.clear();
+		this.editorInvalidatedHandlers.clear();
 		this.socket?.disconnect();
 		this.socket = null;
 	}

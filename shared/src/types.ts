@@ -86,6 +86,10 @@ export type MembersChangedEvent = {
 	members: WorkspaceMember[];
 };
 
+export type EditorInvalidatedEvent = {
+	reason: "fileDeleted" | "replacedByTab";
+};
+
 export type DocumentResponse = {
 	version: number;
 	doc: string;

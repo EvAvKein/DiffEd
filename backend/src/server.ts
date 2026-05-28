@@ -42,7 +42,7 @@ app.use(
 Endpoints.getFiles(app);
 Endpoints.getFileById(app);
 Endpoints.uploadFile(app);
-Endpoints.deleteFile(app);
+Endpoints.deleteFile(app, collabApi);
 
 UserEndpoints.signupUser(app);
 UserEndpoints.modifyUser(app);

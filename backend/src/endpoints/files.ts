@@ -7,6 +7,7 @@ import {isDbError, isInvalidByteSequence, isUniqueViolation} from "#/src/utils.j
 import {validateFile} from "#shared/src/fileValidation.js";
 import multer from "multer";
 import fileQueryService from "#/src/queries/files.js";
+import type {CollabSocketApi} from "./collabSocket.js";
 
 function getFiles(app: Express) {
 	app.get("/api/files", requireAuthOrApiKey, async (req: AuthRequest, res: Response<ApiResponse<FileListItem[]>>) => {
@@ -112,7 +113,7 @@ function uploadFile(app: Express) {
 	);
 }
 
-function deleteFile(app: Express) {
+function deleteFile(app: Express, collabApi: CollabSocketApi) {
 	app.delete("/api/files/:fileId", requireAuthOrApiKey, async (req: AuthRequest, res: Response<ApiResponse<null>>) => {
 		timestampedLog(`REQUEST >>> ${req.method} ${req.url}`);
 
@@ -128,6 +129,8 @@ function deleteFile(app: Express) {
 			if (!result) {
 				return res.status(403).json({ok: false, error: "Forbidden"});
 			}
+
+			await collabApi.evictDeletedFile(userId, fileId.data);
 
 			return res.status(200).json({ok: true, data: null});
 		} catch (error: unknown) {

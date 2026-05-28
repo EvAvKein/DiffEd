@@ -43,9 +43,16 @@ type SharedEditorProps = {
 	myOwnerId: number;
 	initialMembers: WorkspaceMember[];
 	onRepickFile: () => void;
+	reloadSignal: number;
 };
 
-export default function Editor({connection, myOwnerId, initialMembers, onRepickFile}: SharedEditorProps): JSX.Element {
+export default function Editor({
+	connection,
+	myOwnerId,
+	initialMembers,
+	onRepickFile,
+	reloadSignal,
+}: SharedEditorProps): JSX.Element {
 	const showToast = useShowToast();
 	const currentUser = useCurrentUser()!;
 
@@ -216,7 +223,7 @@ export default function Editor({connection, myOwnerId, initialMembers, onRepickF
 			hasUnmounted = true;
 			destroyView();
 		};
-	}, [connection, myOwnerId, memberInitialDoc, basePeerId, retryCount]);
+	}, [connection, myOwnerId, memberInitialDoc, basePeerId, retryCount, reloadSignal]);
 
 	function retryInitialization(): void {
 		setError(null);

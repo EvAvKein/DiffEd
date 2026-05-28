@@ -1,22 +1,25 @@
 import {useParams} from "react-router";
 import type {WorkspaceInfo} from "#shared/src/types";
-import {useEffect, useMemo, useState} from "react";
+import {useEffect, useMemo, useRef, useState} from "react";
 import {CollabConnection, leaveWorkspace} from "./collabClient";
 import {apiFetch} from "../utils";
 import FilePicker from "./FilePicker";
 import Editor from "./Editor";
 import {useCurrentUser} from "../stores/userStore";
+import {useShowToast} from "../stores/toastStore";
 
 export default function EditorPage() {
 	const params = useParams();
 	const workspaceId = params.workspaceId;
 	const user = useCurrentUser()!;
+	const showToast = useShowToast();
 
 	const [sessionInfo, setSessionInfo] = useState<WorkspaceInfo | null>(null);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [joining, setJoining] = useState(true);
 	const [showFilePicker, setShowFilePicker] = useState(false);
 	const [offline, setOffline] = useState(false);
+	const [reloadSignal, setReloadSignal] = useState(0);
 
 	const connection = useMemo(
 		() => (workspaceId ? new CollabConnection(workspaceId, (c) => setOffline(!c)) : null),
@@ -44,18 +47,39 @@ export default function EditorPage() {
 		};
 	}, [workspaceId]);
 
+	// Lets the subscribeMembers callback below read the latest sessionInfo without re-subscribing
+	// on every change (its closure would otherwise freeze on the value at subscription time).
+	const sessionInfoRef = useRef(sessionInfo);
+	useEffect(() => {
+		sessionInfoRef.current = sessionInfo;
+	}, [sessionInfo]);
+
 	useEffect(() => {
 		if (!connection) return;
 		const unsubscribe = connection.subscribeMembers((event) => {
+			const prev = sessionInfoRef.current;
+			const wasMember = prev?.members.some((m) => m.id === user.id) ?? false;
+			const nowMember = event.members.some((m) => m.id === user.id);
+			if (!wasMember && nowMember) setShowFilePicker(false);
 			setJoining(false);
-			setShowFilePicker(false);
-			setSessionInfo({
-				id: event.workspaceId,
-				members: event.members,
-			});
+			setSessionInfo({id: event.workspaceId, members: event.members});
 		});
 		return unsubscribe;
 	}, [connection, user.id]);
+
+	useEffect(() => {
+		if (!connection) return;
+		return connection.subscribeEditorInvalidated((event) => {
+			if (event.reason === "fileDeleted") {
+				showToast("error", "This file has been deleted.");
+				// The accompanying membersChanged removes us from members,
+				// and the !isMember render path routes to FilePicker.
+				return;
+			}
+			showToast("info", "Another tab switched this session to a different file.");
+			setReloadSignal((s) => s + 1);
+		});
+	}, [connection, showToast]);
 
 	useEffect(() => {
 		if (!connection) return;
@@ -81,13 +105,14 @@ export default function EditorPage() {
 				</div>
 			)}
 			{!isMember || showFilePicker ? (
-				<FilePicker connection={connection} />
+				<FilePicker connection={connection} onPicked={() => setShowFilePicker(false)} />
 			) : (
 				<Editor
 					connection={connection}
 					myOwnerId={user.id}
 					initialMembers={sessionInfo.members}
 					onRepickFile={() => setShowFilePicker(true)}
+					reloadSignal={reloadSignal}
 				/>
 			)}
 		</>

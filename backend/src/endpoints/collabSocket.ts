@@ -10,6 +10,7 @@ import type {
 	UserFile,
 	CollabRequest,
 	DocumentResponse,
+	EditorInvalidatedEvent,
 	ErrorResponse,
 	MembersChangedEvent,
 	NameUpdateResponse,
@@ -53,6 +54,7 @@ type CollabSocketState = {
 export type CollabSocketApi = {
 	createWorkspaceFromFile: (userId: number, fileId: string) => Promise<string>;
 	getWorkspaceInfo: (workspaceId: string) => WorkspaceInfo | undefined;
+	evictDeletedFile: (userId: number, fileId: string) => Promise<void>;
 };
 
 function serializeUpdates(updates: readonly Update[]): SerializedUpdate[] {
@@ -160,6 +162,27 @@ export function initCollabSocket(sockets: Server, db: Pool): CollabSocketApi {
 		}
 	}
 
+	async function evictDeletedDoc(doc: LiveDocState): Promise<void> {
+		if (doc.dbSaveDebounceTimer) {
+			clearTimeout(doc.dbSaveDebounceTimer);
+			doc.dbSaveDebounceTimer = null;
+		}
+		doc.hasUnsavedChanges = false;
+		state.docs.delete(doc.fileId);
+		drainPending(doc.pendingUpdates, []);
+		drainPending(doc.pendingName, doc.fileName);
+
+		const event: EditorInvalidatedEvent = {reason: "fileDeleted"};
+		for (const workspace of state.workspaces.values()) {
+			if (workspace.memberFiles.get(doc.ownerId) !== doc.fileId) continue;
+			workspace.memberFiles.delete(doc.ownerId);
+			for (const [socketId, userId] of workspace.connectedSockets) {
+				if (userId === doc.ownerId) sockets.to(socketId).emit("editorInvalidated", event);
+			}
+			await broadcastMembers(workspace);
+		}
+	}
+
 	async function flushDoc(doc: LiveDocState): Promise<void> {
 		// The callback that fired is no longer pending once we start processing it
 		doc.dbSaveDebounceTimer = null;
@@ -180,15 +203,8 @@ export function initCollabSocket(sockets: Server, db: Pool): CollabSocketApi {
 			]);
 			if (updateResult.rowCount === 0) {
 				timestampedLog(`File deleted while session was active, evicting doc: ${doc.fileId}`);
-				for (const workspace of state.workspaces.values()) {
-					if (workspace.memberFiles.get(doc.ownerId) === doc.fileId) {
-						workspace.memberFiles.delete(doc.ownerId);
-					}
-				}
-				state.docs.delete(doc.fileId);
-				drainPending(doc.pendingUpdates, []);
-				drainPending(doc.pendingName, doc.fileName);
 				doc.isFlushInProgress = false;
+				await evictDeletedDoc(doc);
 				return;
 			} else if (updateResult.rowCount! > 1) {
 				timestampedLog(`Multiple files updated for collab doc ${doc.fileId}`);
@@ -204,6 +220,11 @@ export function initCollabSocket(sockets: Server, db: Pool): CollabSocketApi {
 		if (doc.hasUnsavedChanges && !doc.dbSaveDebounceTimer) {
 			scheduleFlush(doc);
 		}
+	}
+
+	async function evictDeletedFile(userId: number, fileId: string): Promise<void> {
+		const doc = state.docs.get(fileId);
+		if (doc && doc.ownerId === userId) await evictDeletedDoc(doc);
 	}
 
 	function scheduleFlush(doc: LiveDocState): void {
@@ -290,6 +311,8 @@ export function initCollabSocket(sockets: Server, db: Pool): CollabSocketApi {
 	async function removeUserFromWorkspace(workspace: Workspace, userId: number): Promise<void> {
 		const fileId = workspace.memberFiles.get(userId);
 		if (!fileId) return;
+		if (workspace.connectedSockets.values().some((connectedUserId) => connectedUserId == userId)) return;
+
 		workspace.memberFiles.delete(userId);
 		await releaseDocRef(fileId);
 		if (workspace.connectedSockets.size > 0) {
@@ -306,7 +329,7 @@ export function initCollabSocket(sockets: Server, db: Pool): CollabSocketApi {
 		}
 
 		const doc = await loadDoc(userId, fileId);
-		if (!doc) throw new Error("File not found or not owned by user");
+		if (!doc || !state.docs.has(fileId)) throw new Error("File not found or not owned by user");
 
 		const workspaceId = crypto.randomUUID();
 		const workspace: Workspace = {
@@ -394,12 +417,27 @@ export function initCollabSocket(sockets: Server, db: Pool): CollabSocketApi {
 							}
 							await releaseDocRef(oldFileId);
 						}
+						// The doc might've been evicted while we awaited above,
+						// refuse the joining rather than leaving the workspace pointing at a fileId with no live doc.
+						if (!state.docs.has(data.fileId)) {
+							sendResponse({error: "File was deleted while loading"} satisfies ErrorResponse);
+							break;
+						}
 						workspace.memberFiles.set(userId, data.fileId);
 						sendResponse(true);
 						try {
 							await broadcastMembers(workspace);
 						} catch (err) {
 							timestampedLog(`Failed to broadcast members after pickFile: ${String(err)}`);
+						}
+
+						// Other tabs of this user would otherwise keep pushing changed,
+						// based on the old file but into the new file's doc.
+						const reassigned: EditorInvalidatedEvent = {reason: "replacedByTab"};
+						for (const [otherSocketId, otherUserId] of workspace.connectedSockets) {
+							if (otherUserId === userId && otherSocketId !== socket.id) {
+								sockets.to(otherSocketId).emit("editorInvalidated", reassigned);
+							}
 						}
 						break;
 					}
@@ -518,5 +556,5 @@ export function initCollabSocket(sockets: Server, db: Pool): CollabSocketApi {
 		});
 	});
 
-	return {createWorkspaceFromFile, getWorkspaceInfo};
+	return {createWorkspaceFromFile, getWorkspaceInfo, evictDeletedFile};
 }

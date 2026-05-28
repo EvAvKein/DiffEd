@@ -4,12 +4,14 @@ import FileBrowser from "../fileBrowser/FileBrowser";
 
 type FilePickerProps = {
 	connection: CollabConnection;
+	onPicked: () => void;
 };
 
-function FilePicker({connection}: FilePickerProps): JSX.Element {
+function FilePicker({connection, onPicked}: FilePickerProps): JSX.Element {
 	async function handlePick(fileId: string) {
 		try {
 			await pickFile(connection, fileId);
+			onPicked();
 		} catch (err) {
 			if (err && typeof err === "object" && "message" in err) {
 				if (typeof err.message === "string") throw err.message;

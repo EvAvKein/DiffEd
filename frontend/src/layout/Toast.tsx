@@ -3,7 +3,7 @@ import {createPortal} from "react-dom";
 import {useToastStore} from "../stores/toastStore.ts";
 
 const MIN_TOAST_MS = 4000;
-const MS_PER_CHAR = 50;
+const MS_PER_CHAR = 100;
 
 function toastDuration(message: string): number {
 	return Math.max(MIN_TOAST_MS, message.length * MS_PER_CHAR);
