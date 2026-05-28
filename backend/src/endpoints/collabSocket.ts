@@ -17,7 +17,7 @@ import type {
 	WorkspaceInfo,
 } from "#shared/src/types.js";
 
-const MAX_WORKSPACE_MEMBERS = 8;
+const MAX_WORKSPACE_MEMBERS = 4;
 const DATABASE_SAVE_DEBOUNCE_MS = 1500;
 // Gives users time to refresh, recover from a network blip, or navigate back before participation/workspace is destroyed & flushed
 const DISCONNECT_GRACE_MS = 10_000;

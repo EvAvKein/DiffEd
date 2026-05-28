@@ -34,6 +34,8 @@ export function PublicTopBar() {
 	);
 }
 
+const MAX_VIEWABLE_USERNAME_LEN = 12;
+
 export function UserTopBar() {
 	const navigate = useNavigate();
 	const showToast = useShowToast();
@@ -59,6 +61,13 @@ export function UserTopBar() {
 		}
 	}
 
+	function truncateUsername(username: string) {
+		if (username.length > MAX_VIEWABLE_USERNAME_LEN) {
+			return username.slice(0, MAX_VIEWABLE_USERNAME_LEN - 3) + "...";
+		}
+		return username;
+	}
+
 	return (
 		<nav className="flex items-center justify-between bg-surface px-2 py-2">
 			<ContentSkipLink />
@@ -69,7 +78,8 @@ export function UserTopBar() {
 				<TopBarLink to="/account" className="flex items-center gap-2">
 					{currentUser && (
 						<>
-							<img src="/api/user/avatar" alt="" className="w-5 h-5 rounded-full object-cover" /> {currentUser.username}
+							<img src="/api/user/avatar" alt="" className="w-5 h-5 rounded-full object-cover" />{" "}
+							{truncateUsername(currentUser.username)}
 						</>
 					)}
 				</TopBarLink>

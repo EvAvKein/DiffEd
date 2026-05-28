@@ -8,7 +8,16 @@ type PeerBarProps = {
 	onSelect: (ownerId: number | null) => void;
 };
 
+const MAX_VIEWABLE_PEER_NAME_LEN = 10;
+
 export default function PeerBar({peers, readyPeerIds, selectedPeerId, onSelect}: PeerBarProps): JSX.Element {
+	function truncatePeerName(username: string) {
+		if (username.length > MAX_VIEWABLE_PEER_NAME_LEN) {
+			return username.slice(0, MAX_VIEWABLE_PEER_NAME_LEN - 3) + "...";
+		}
+		return username;
+	}
+
 	return (
 		<div className="flex flex-row items-center gap-2 p-2 bg-surface-dark">
 			{peers.length === 0 ? (
@@ -40,7 +49,7 @@ export default function PeerBar({peers, readyPeerIds, selectedPeerId, onSelect}:
 								className={`flex items-center gap-2 text-foreground-light px-2 py-1 border ${borderClass} ${stateClass}`}
 							>
 								<img src={`/api/user/${peer.id}/avatar`} alt="" className="w-5 h-5 rounded-full object-cover" />
-								{peer.username}
+								{truncatePeerName(peer.username)}
 							</button>
 						);
 					})}
