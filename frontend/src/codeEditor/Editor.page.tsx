@@ -16,8 +16,12 @@ export default function EditorPage() {
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [joining, setJoining] = useState(true);
 	const [showFilePicker, setShowFilePicker] = useState(false);
+	const [offline, setOffline] = useState(false);
 
-	const connection = useMemo(() => (workspaceId ? new CollabConnection(workspaceId) : null), [workspaceId]);
+	const connection = useMemo(
+		() => (workspaceId ? new CollabConnection(workspaceId, (c) => setOffline(!c)) : null),
+		[workspaceId],
+	);
 
 	useEffect(() => {
 		if (!workspaceId) return;
@@ -56,7 +60,7 @@ export default function EditorPage() {
 	useEffect(() => {
 		if (!connection) return;
 		return function cleanup() {
-			void leaveWorkspace(connection);
+			leaveWorkspace(connection);
 			connection.disconnect();
 		};
 	}, [connection]);
@@ -69,16 +73,23 @@ export default function EditorPage() {
 
 	const isMember = sessionInfo.members.some((member) => member.id === user.id);
 
-	if (!isMember || showFilePicker) {
-		return <FilePicker connection={connection} />;
-	}
-
 	return (
-		<Editor
-			connection={connection}
-			myOwnerId={user.id}
-			initialMembers={sessionInfo.members}
-			onRepickFile={() => setShowFilePicker(true)}
-		/>
+		<>
+			{offline && (
+				<div role="status" className="bg-error text-foreground-light text-sm text-center py-1">
+					Disconnected. Trying to reconnect…
+				</div>
+			)}
+			{!isMember || showFilePicker ? (
+				<FilePicker connection={connection} />
+			) : (
+				<Editor
+					connection={connection}
+					myOwnerId={user.id}
+					initialMembers={sessionInfo.members}
+					onRepickFile={() => setShowFilePicker(true)}
+				/>
+			)}
+		</>
 	);
 }

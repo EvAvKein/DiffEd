@@ -61,9 +61,7 @@ export function UserLayout() {
 	return (
 		<>
 			<UserTopBar />
-			<main id="main">
-				<Outlet />
-			</main>
+			<main id="main">{storeUser ? <Outlet /> : null}</main>
 		</>
 	);
 }

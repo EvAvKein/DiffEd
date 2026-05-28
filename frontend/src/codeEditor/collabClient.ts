@@ -31,9 +31,11 @@ export class CollabConnection {
 	private requestId = 0;
 	private pendingRequests = new Map<number, PendingRequest>();
 	private membersHandlers = new Set<MembersHandler>();
+	private setConnected: (connected: boolean) => void;
 
-	constructor(workspaceId: string) {
+	constructor(workspaceId: string, setConnected: (connected: boolean) => void) {
 		this.workspaceId = workspaceId;
+		this.setConnected = setConnected;
 	}
 
 	private getOrCreateSocket(): Socket {
@@ -74,12 +76,17 @@ export class CollabConnection {
 			}
 		});
 
+		this.socket.on("connect", () => {
+			this.setConnected(true);
+		});
+
 		this.socket.on("connect_error", (error) => {
 			this.rejectAllPending(error);
 		});
 
 		this.socket.on("disconnect", (reason) => {
 			this.rejectAllPending(new Error(`Collab socket disconnected: ${reason}`));
+			this.setConnected(false);
 		});
 
 		return this.socket;
@@ -153,6 +160,17 @@ export class CollabConnection {
 		};
 	}
 
+	// Fire-and-forget message to the server that we're leaving.
+	// Must run synchronously before disconnect() - request/response can't survive teardown.
+	sendLeaveWorkspace(): void {
+		if (!this.socket?.connected) return;
+		this.socket.emit("collabRequest", {
+			requestId: this.requestId++,
+			workspaceId: this.workspaceId,
+			type: "leaveWorkspace",
+		});
+	}
+
 	disconnect(): void {
 		this.rejectAllPending(new Error("Collab connection closed"));
 		this.membersHandlers.clear();
@@ -207,6 +225,6 @@ export async function pickFile(connection: CollabConnection, fileId: string): Pr
 	await connection.request({type: "pickFile", fileId});
 }
 
-export async function leaveWorkspace(connection: CollabConnection): Promise<void> {
-	await connection.request({type: "leaveWorkspace"});
+export function leaveWorkspace(connection: CollabConnection): void {
+	connection.sendLeaveWorkspace();
 }
