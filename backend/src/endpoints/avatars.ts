@@ -7,7 +7,7 @@ import type {ApiResponse} from "#shared/src/types.js";
 import {timestampedLog} from "#/src/logging.js";
 import {requireAuthOrApiKey, userIdAfterAuth, type AuthRequest} from "#/src/middleware.js";
 import userQueryService from "#/src/queries/users.js";
-import {MAX_FILE_SIZE} from "../fileValidation.js";
+import {MAX_FILE_SIZE} from "#shared/src/fileValidation.js";
 
 const AVATAR_DIR = path.resolve("/data/avatars");
 const DEFAULT_AVATAR = "default.jpg";
