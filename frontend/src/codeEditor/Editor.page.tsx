@@ -76,7 +76,7 @@ export default function EditorPage() {
 	return (
 		<>
 			{offline && (
-				<div role="status" className="bg-error text-foreground-light text-sm text-center py-1">
+				<div role="status" className="bg-error text-white text-sm text-center py-1">
 					Disconnected. Trying to reconnect…
 				</div>
 			)}

@@ -15,6 +15,7 @@ import type {ApiResponse, User} from "#shared/src/types.js";
 import {MAX_AVATAR_SIZE, EMAIL_MAX_LENGTH, validatePassword} from "#shared/src/userValidation.js";
 import Hints from "../components/Hints";
 import PasswordInput from "../components/PasswordInput";
+import useMediaQuery from "./useMediaQuery";
 
 const emailSchema = z.email();
 
@@ -555,6 +556,7 @@ export default function UserManagementPage() {
 	const [isLoading, setIsLoading] = useState(!currentUser);
 	const showToast = useShowToast();
 	const navigate = useNavigate();
+	const isMediumUp = useMediaQuery("(min-width: 768px)");
 
 	useEffect(() => {
 		apiFetch<User>("/api/user", {method: "GET", credentials: "include"}).then((response) => {
@@ -568,38 +570,58 @@ export default function UserManagementPage() {
 		});
 	}, []);
 
-	return isLoading || !currentUser ? (
-		<div>Loading...</div>
-	) : (
+	if (isLoading || !currentUser) return <div>Loading...</div>;
+
+	const title = <Subheading className="text-3xl! font-bold">Account settings</Subheading>;
+	const avatar = <Avatar hasAvatar={!!currentUser.has_avatar} />;
+	const account = (
+		<OutlineDiv>
+			<UserSettings
+				user={currentUser}
+				onUpdate={(username, email) => {
+					if (username !== undefined) updateUser({username});
+					if (email !== undefined) updateUser({email});
+				}}
+			/>
+			<Password />
+			<GithubLink githubLinked={!!currentUser.github_linked} />
+		</OutlineDiv>
+	);
+	const editor = (
+		<OutlineDiv>
+			<Subheading>Editor settings</Subheading>
+			<VimBindings enabled={currentUser.vim_bindings} />
+		</OutlineDiv>
+	);
+	const apiKey = <ApiKey hasApiKey={!!currentUser.has_apikey} />;
+	const danger = <Delete />;
+
+	return (
 		<>
-			<div className="grid grid-cols-1 gap-4 w-64 mx-auto">
-				<OutlineDiv>
-					<Subheading>Account settings</Subheading>
-					<UserSettings
-						user={currentUser}
-						onUpdate={(username, email) => {
-							if (username !== undefined) updateUser({username});
-							if (email !== undefined) updateUser({email});
-						}}
-					/>
-					<Password />
-					<GithubLink githubLinked={!!currentUser.github_linked} />
-				</OutlineDiv>
-
-				<ApiKey hasApiKey={!!currentUser.has_apikey} />
-
-				<OutlineDiv>
-					<Subheading>Editor settings</Subheading>
-					<VimBindings enabled={currentUser.vim_bindings} />
-				</OutlineDiv>
-
-				<Avatar hasAvatar={!!currentUser.has_avatar} />
-
-				<Delete />
+			<div className="min-h-[calc(100vh-105px)] flex flex-col items-center mt-4">
+				{title}
+				{isMediumUp ? (
+					<div className="flex justify-center gap-4">
+						<div className="flex flex-col gap-4 w-64">
+							{avatar}
+							{apiKey}
+							{danger}
+						</div>
+						<div className="flex flex-col gap-4 w-64">
+							{account} {editor}
+						</div>
+					</div>
+				) : (
+					<div className="flex flex-col gap-4 w-64">
+						{avatar}
+						{account}
+						{editor}
+						{apiKey}
+						{danger}
+					</div>
+				)}
 			</div>
-			<div className="mt-12">
-				<Footer />
-			</div>
+			<Footer />
 		</>
 	);
 }

@@ -267,6 +267,7 @@ export default function Editor({connection, myOwnerId, initialMembers, onRepickF
 				readyPeerIds={readyPeerIds}
 				selectedPeerId={selectedPeerId}
 				onSelect={setSelectedPeerId}
+				showToast={showToast}
 			/>
 			<div className="flex flex-wrap items-center justify-between p-1">
 				<ResettingForm initialValue={fileName} onSubmit={handleRename} inputLabel="Filename" buttonLabel="Rename" />

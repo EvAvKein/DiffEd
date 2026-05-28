@@ -12,9 +12,9 @@ type passwordInputProps = {
 function PasswordInput({label, id, showHints, value, onChange}: passwordInputProps) {
 	return (
 		<>
-			<label htmlFor="password-input">{label ?? "Password"}</label>
+			<label htmlFor={id}>{label ?? "Password"}</label>
 			{showHints ? <Hints hints={["Minimum length 14", "Maximum length 128"]} /> : null}
-			<Input id={id ?? undefined} placeholder="**************" type="password" value={value} onChange={onChange} />
+			<Input id={id ?? "password"} placeholder="**************" type="password" value={value} onChange={onChange} />
 		</>
 	);
 }

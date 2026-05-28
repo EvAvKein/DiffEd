@@ -9,6 +9,7 @@ import {getSession, apiFetch} from "#/src/utils.ts";
 import {useShowToast} from "#/src/stores/toastStore";
 import {useSetUser} from "#/src/stores/userStore.ts";
 import type {ApiResponse, User} from "#shared/src/types.js";
+import Subheading from "../components/Subheading";
 
 export default function LoginPage() {
 	const [loginIdentifier, setLoginIdentifier] = useState("");
@@ -61,7 +62,8 @@ export default function LoginPage() {
 	}
 
 	return (
-		<div className="flex flex-col items-center justify-center pt-12 gap-2">
+		<div className="min-h-[calc(100vh-105px)] flex flex-col items-center pt-12 gap-2">
+			<Subheading className={"text-3xl! font-bold"}>Log in to your account</Subheading>
 			<form onSubmit={login} className="grid grid-cols-[auto_1fr] items-center gap-y-2 gap-x-2 w-fit">
 				<label htmlFor="login" className="text-right">
 					Login

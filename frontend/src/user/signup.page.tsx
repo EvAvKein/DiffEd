@@ -123,27 +123,26 @@ export default function SignupPage() {
 		}
 	}
 
-	// TODO: should we use maxlength for the input fields?
-
 	if (pendingGithub) {
 		return (
-			<div>
-				<div>Complete your GitHub sign-up</div>
-				<form onSubmit={completeGithubSignup}>
-					<div>
-						<Input placeholder="username" value={username} onChange={(e) => setUserName(e.target.value)} />
-					</div>
-					<div>
-						<Button type="submit">Create Account</Button>
-					</div>
+			<div className="min-h-[calc(100vh-105px)] flex flex-col items-center pt-12 gap-2">
+				<Subheading className={"text-3xl! font-bold"}>Complete your GitHub sign-up</Subheading>
+				<form className="flex flex-col items-center" onSubmit={completeGithubSignup}>
+					<Input
+						className="block"
+						placeholder="username"
+						value={username}
+						onChange={(e) => setUserName(e.target.value)}
+					/>
+					<Button type="submit">Create Account</Button>
 				</form>
 			</div>
 		);
 	}
 
 	return (
-		<div className="flex flex-col items-center justify-center">
-			<Subheading>Create a new account</Subheading>
+		<div className="min-h-[calc(100vh-105px)] flex flex-col items-center pt-12 gap-1">
+			<Subheading className={"text-3xl! font-bold"}>Create a new account</Subheading>
 			<form onSubmit={signup} className="flex flex-col items-center justify-center">
 				<label htmlFor="username-input">Username</label>
 				<Hints id="username-hints" hints={["Minimum length 3", "Maximum length 20"]} />
@@ -173,7 +172,7 @@ export default function SignupPage() {
 				<Button type="button">Sign up with GitHub</Button>
 			</a>
 			<div>
-				Already have an account? Go to&nbsp;
+				Already have an account? Go to the&nbsp;
 				<button
 					onClick={() => navigate("/login", {state: from ? {from} : undefined})}
 					className="hover:text-accent font-bold underline cursor-pointer"
