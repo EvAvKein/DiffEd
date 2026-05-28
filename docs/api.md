@@ -52,9 +52,9 @@ console.log(response.data); // logs your api key
 ```
 
 ```shell
-curl -X GET -H "x-api-key: invalid_api_key" <HOSTNAME>[:PORT]/api/user/api-key
+curl -k -X GET -H "x-api-key: invalid_api_key" https://<HOSTNAME>[:PORT]/api/user/api-key
 {"ok":false,"error":"Unauthorized"}
-curl -X GET -H "x-api-key: valid_api_key" <HOSTNAME>[:PORT]/api/user/api-key
+curl -k -X GET -H "x-api-key: valid_api_key" https://<HOSTNAME>[:PORT]/api/user/api-key
 {"ok":true,"data":"valid_api_key"}
 ```
 
@@ -73,7 +73,7 @@ console.log(response.data); // logs your new api key
 ```
 
 ```shell
-curl -X PATCH -H "x-api-key: your_api_key" <HOSTNAME>[:PORT]/api/user/api-key
+curl -k -X PATCH -H "x-api-key: your_api_key" https://<HOSTNAME>[:PORT]/api/user/api-key
 {"ok":true,"data":"new-uuid-api-key"}
 ```
 
@@ -91,7 +91,7 @@ fetch("/api/user/api-key", {method: "DELETE", headers: {"x-api-key": "your_api_k
 ```
 
 ```shell
-curl -X DELETE -H "x-api-key: your_api_key" <HOSTNAME>[:PORT]/api/user/api-key
+curl -k -X DELETE -H "x-api-key: your_api_key" https://<HOSTNAME>[:PORT]/api/user/api-key
 {"ok":true,"data":null}
 ```
 
@@ -116,7 +116,7 @@ console.log(response.data); // logs your account info
 ```
 
 ```shell
-curl -X GET -H "x-api-key: your_api_key" <HOSTNAME>[:PORT]/api/user
+curl -k -X GET -H "x-api-key: your_api_key" https://<HOSTNAME>[:PORT]/api/user
 {"ok":true,"data":{"id":1,"username":"jane","email":"jane@example.com","github_linked":false,"has_apikey":true,"vim_bindings":false}}
 ```
 
@@ -147,9 +147,9 @@ fetch("/api/user", {
 ```
 
 ```shell
-curl -X PATCH -H "x-api-key: your_api_key" -H "Content-Type: application/json" \
+curl -k -X PATCH -H "x-api-key: your_api_key" -H "Content-Type: application/json" \
   -d '{"email":"new@example.com","password":"current_password"}' \
-  <HOSTNAME>[:PORT]/api/user
+  https://<HOSTNAME>[:PORT]/api/user
 {"ok":true,"data":null}
 ```
 
@@ -175,7 +175,7 @@ fetch("/api/user", {
 ```
 
 ```shell
-curl -X DELETE -H "x-api-key: your_api_key" -H "Content-Type: application/json" \
+curl -k -X DELETE -H "x-api-key: your_api_key" -H "Content-Type: application/json" \
   -d '{"password":"your_password"}' <HOSTNAME>[:PORT]/api/user
 {"ok":true,"data":null}
 ```
@@ -195,7 +195,7 @@ fetch("/api/auth/github/link", {method: "DELETE", headers: {"x-api-key": "your_a
 ```
 
 ```shell
-curl -X DELETE -H "x-api-key: your_api_key" <HOSTNAME>[:PORT]/api/auth/github/link
+curl -k -X DELETE -H "x-api-key: your_api_key" https://<HOSTNAME>[:PORT]/api/auth/github/link
 {"ok":true,"data":null}
 ```
 
@@ -215,12 +215,12 @@ const response = fetch("/api/user/avatar", {method: "GET", headers: {"x-api-key"
 ```
 
 ```shell
-curl -H "x-api-key: your_api_key" <HOSTNAME>[:PORT]/api/user/avatar --output avatar.jpg
+curl -k -H "x-api-key: your_api_key" https://<HOSTNAME>[:PORT]/api/user/avatar --output avatar.jpg
 ```
 
 #### Update avatar
 
-- Request type: `PATCH`
+- Request type: `PUT`
 - Endpoint: `api/user/avatar`
 - Request body (multipart/form-data):
   - `avatar: File`, the image to upload — must be JPEG, PNG or WebP, max 1 MiB
@@ -234,11 +234,11 @@ curl -H "x-api-key: your_api_key" <HOSTNAME>[:PORT]/api/user/avatar --output ava
 ```js
 const data = new FormData();
 data.append("avatar", myImageFile);
-fetch("/api/user/avatar", {method: "PATCH", headers: {"x-api-key": "your_api_key"}, body: data});
+fetch("/api/user/avatar", {method: "PUT", headers: {"x-api-key": "your_api_key"}, body: data});
 ```
 
 ```shell
-curl -X PATCH -H "x-api-key: your_api_key" -F "avatar=@picture.png" <HOSTNAME>[:PORT]/api/user/avatar
+curl -k -X PUT -H "x-api-key: your_api_key" -F "avatar=@picture.png" https://<HOSTNAME>[:PORT]/api/user/avatar
 {"ok":true,"data":null}
 ```
 
@@ -257,7 +257,7 @@ fetch("/api/user/avatar", {method: "DELETE", headers: {"x-api-key": "your_api_ke
 ```
 
 ```shell
-curl -X DELETE -H "x-api-key: your_api_key" <HOSTNAME>[:PORT]/api/user/avatar
+curl -k -X DELETE -H "x-api-key: your_api_key" https://<HOSTNAME>[:PORT]/api/user/avatar
 {"ok":true,"data":null}
 ```
 
@@ -279,7 +279,7 @@ console.log(response.data); // logs your files
 ```
 
 ```shell
-curl -X GET -H "x-api-key: your_api_key" <HOSTNAME>[:PORT]/api/files
+curl -k -X GET -H "x-api-key: your_api_key" https://<HOSTNAME>[:PORT]/api/files
 {"ok":true,"data":[{"id":"a1b2c3d4-...","name":"hello.txt"}]}
 ```
 
@@ -304,7 +304,7 @@ console.log(response.data); // logs the file
 ```
 
 ```shell
-curl -X GET -H "x-api-key: your_api_key" <HOSTNAME>[:PORT]/api/files/a1b2c3d4-...
+curl -k -X GET -H "x-api-key: your_api_key" https://<HOSTNAME>[:PORT]/api/files/a1b2c3d4-...
 {"ok":true,"data":{"id":"a1b2c3d4-...","name":"hello.txt","content":"hi there"}}
 ```
 
@@ -329,7 +329,7 @@ fetch("/api/files", {method: "POST", headers: {"x-api-key": "your_api_key"}, bod
 ```
 
 ```shell
-curl -X POST -H "x-api-key: your_api_key" -F "file=@hello.txt" <HOSTNAME>[:PORT]/api/files
+curl -k -X POST -H "x-api-key: your_api_key" -F "file=@hello.txt" https://<HOSTNAME>[:PORT]/api/files
 {"ok":true,"data":"a1b2c3d4-..."}
 ```
 
@@ -351,7 +351,7 @@ fetch("/api/files/a1b2c3d4-...", {method: "DELETE", headers: {"x-api-key": "your
 ```
 
 ```shell
-curl -X DELETE -H "x-api-key: your_api_key" <HOSTNAME>[:PORT]/api/files/a1b2c3d4-...
+curl -k -X DELETE -H "x-api-key: your_api_key" https://<HOSTNAME>[:PORT]/api/files/a1b2c3d4-...
 {"ok":true,"data":null}
 ```
 
@@ -380,7 +380,7 @@ console.log(response.data); // logs { workspaceId: "..." }
 ```
 
 ```shell
-curl -X POST -H "x-api-key: your_api_key" -H "Content-Type: application/json" \
+curl -k -X POST -H "x-api-key: your_api_key" -H "Content-Type: application/json" \
   -d '{"fileId":"a1b2c3d4-..."}' <HOSTNAME>[:PORT]/api/workspace
 {"ok":true,"data":{"workspaceId":"f5e6d7c8-..."}}
 ```
@@ -407,6 +407,6 @@ console.log(response.data); // logs the workspace info
 ```
 
 ```shell
-curl -X GET -H "x-api-key: your_api_key" <HOSTNAME>[:PORT]/api/workspace/f5e6d7c8-...
+curl -k -X GET -H "x-api-key: your_api_key" https://<HOSTNAME>[:PORT]/api/workspace/f5e6d7c8-...
 {"ok":true,"data":{"id":"f5e6d7c8-...","members":[{"id":1,"username":"jane"}]}}
 ```

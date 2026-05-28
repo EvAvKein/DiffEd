@@ -73,7 +73,7 @@ function multerUpload(req: Request, res: Response<ApiResponse<null>>, next: Next
 }
 
 function updateUserAvatar(app: Express) {
-	app.patch(
+	app.put(
 		"/api/user/avatar",
 		requireAuthOrApiKey,
 		multerUpload,

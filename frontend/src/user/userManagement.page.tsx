@@ -472,7 +472,7 @@ function Avatar({hasAvatar}: {hasAvatar: boolean}) {
 			setIsLoading(true);
 
 			const response: ApiResponse<null> = await apiFetch("/api/user/avatar", {
-				method: "PATCH",
+				method: "PUT",
 				credentials: "include",
 				body: formData,
 			});
