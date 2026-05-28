@@ -38,7 +38,10 @@ function FileUploader({pushToFileList, refreshFileList}: FileUploaderProps) {
 			}
 		}
 		if (fileInputRef.current) fileInputRef.current.value = "";
-		if (newFilemap.size <= 0) return;
+		if (newFilemap.size <= 0) {
+			setUploadOnGoing(false);
+			return;
+		}
 
 		setFileUploads(newFilemap);
 		const succesfulUploads: string[] = [];
