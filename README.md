@@ -105,13 +105,18 @@ The root `npm run` scripts are thin wrappers around `docker compose` commands. I
 
 - [WCAG 2.1 Quick Reference](https://www.w3.org/WAI/WCAG22/quickref/?versions=2.1&levels=aa): Accessibility compliance guidelines used for development
 
+**Styling**
+
+- [Tailwind documentation](https://tailwindcss.com/docs): Reference for utility classes used in styling
+
 **AI usage**
 
 We use AI tools in this project for:
 
 - Generating initial drafts of documentation
-- Assistance debugging obscure issues
-- Writing boilerplate and automating easy refactors, which were then heavily reviewed by team members
+- Chat-based assistance debugging obscure issues across the project
+- Writing boilerplate and automating easy refactors which were then heavily reviewed by team members
+- Due to prior experience with web, Eve used AI for all features implemented - guiding it (providing it plans, implementation resources, etc) and to automate initial implementations. The AI drafts were subsequently reviewed line-by-line and refactored (occassionally also line-by-line) to meet quality standards and fit desired designs.
 
 All AI code was thoroughly reviewed and tested before being merged.
 
@@ -304,6 +309,12 @@ This project implements **14 points** worth of modules. **Major** modules are wo
 - _Implementation:_ GitHub OAuth via Passport.js lets users sign up, log in, and link/unlink a GitHub account.
 - _Contributors:_ Eve
 
+**Custom design system** - 1 pt
+
+- _Justification:_ A design system ensures a consistent look and feel across the app, improves development speed by providing reusable components, and allows for easier maintenance of the UI.
+- _Implementation:_ A folder with reusable UI components, color palette declared in root CSS file and used throughout, different fonts and visual hierarchy through font sizes, and icon images for buttons.
+- _Contributors:_ Jukka, Eve
+
 ## Individual Contributions
 
 ### Eve Keinan ([EvAvKein](https://github.com/EvAvKein))
@@ -325,7 +336,10 @@ This project implements **14 points** worth of modules. **Major** modules are wo
 
 **Modules:** Both frontend and backend frameworks, Real-time features with WebSockets, WCAG accessibility compliance, Real-time collaboration, Complete notification system, Remote authentication. Contributed to the Public API, and Support for two additional browsers.
 
-**Challenges faced:** _To be added by the team._
+**Challenges faced:**
+
+- Getting all syntax-highlighted text to have accessible color contrast with selection-highlighting overlay.
+- Collaboration (non-OT) state-updates and their edge-cases.
 
 ### Jyri Piensalo ([Sky11y](https://github.com/Sky11y))
 
@@ -354,7 +368,7 @@ This project implements **14 points** worth of modules. **Major** modules are wo
 - File browser - the file list layout, pagination, name sorting, and search filtering
 - Frontend file validation - file type and size checks, and filename collision detection
 - Download button - the file download control
-- Endpoint refactoring - standardising the user-management and general API endpoints, including the `isUniqueViolation` helper
+- Endpoint refactoring - standardising the user-management and general API endpoints, including database errors helper
 - Accessibility - contrast fixes, screenreader compatibility improvements, and keyboard-navigation fixes
 - Shared components - reusable Input, Button, ResettingForm, and DeleteButton components
 - Account settings - contributed to the user-management page styling and inputs
@@ -371,7 +385,7 @@ This project implements **14 points** worth of modules. **Major** modules are wo
 - Backend file management - the file upload (Multer), retrieval, and delete endpoints
 - Backend file validation - file-type and size capping on uploads
 - Multi-call uploads - handling file uploads as multiple independent requests
-- File list optimization - trimming the file endpoints to return only the data the list needs, with a partial `ListUserFile` type
+- File list optimization - trimming the file endpoints to return only the data the list needs, with a partial file type
 - Upload UX - appending and removing files in the upload list, and error handling on failed uploads
 - Public API - contributed to the public file endpoints
 
