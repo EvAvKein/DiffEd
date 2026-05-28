@@ -53,7 +53,11 @@ export default function PeerBar({peers, readyPeerIds, selectedPeerId, onSelect, 
 								onClick={() => onSelect(peer.id)}
 								className={`flex items-center gap-2 text-foreground-light px-2 py-1 border max-w-32 ${borderClass} ${stateClass}`}
 							>
-								<img src={`/api/user/${peer.id}/avatar`} alt={`${peer.username}'s profile picture`} className="w-5 h-5 rounded-full object-cover" />
+								<img
+									src={`/api/user/${peer.id}/avatar`}
+									alt={`${peer.username}'s profile picture`}
+									className="w-5 h-5 rounded-full object-cover"
+								/>
 								<span className="truncate">{peer.username}</span>
 							</button>
 						);

@@ -58,6 +58,8 @@ The root `npm run` scripts are thin wrappers around `docker compose` commands. I
    Open `backend/.env` and fill in the required values:
 
    ```
+   HTTP_PORT=80
+   HTTPS_PORT=443
    POSTGRES_DB=your_database_name_here
    POSTGRES_USER=your_database_user_here
    POSTGRES_PASSWORD=your_database_password_here
@@ -72,7 +74,7 @@ The root `npm run` scripts are thin wrappers around `docker compose` commands. I
    ```sh
    npm run up
    ```
-   This builds and starts the frontend, backend, PostgreSQL database, and Nginx reverse proxy. The app will be available at **http://localhost:8080**.
+   This builds and starts the frontend, backend, PostgreSQL database, and Nginx reverse proxy. The app will be available at **https://localhost** (assuming HTTPS_PORT is set to 443 in backend/.env).
 
 **Other useful commands**
 
@@ -155,6 +157,7 @@ The team works in 2-week sprints, aiming towards code-named release-based versio
 - Tailwind: Utility styling-classes
 - Zustand: Minimal global state management
 - Vite: Build tooling and dev server
+- @tabler/icons-react: Frontend icons package
 
 **Backend**
 
@@ -234,16 +237,17 @@ User Avatar images are stored in a local volume, that the users `avatar_filename
 | API documentation        | In-app reference page documenting the public API endpoints                                                                                            | Jyri, Eve              |
 | Toast notifications      | Feedback for user actions via success, error, and info messages                                                                                       | Eve                    |
 | Containerized deployment | Docker Compose orchestration of a frontend, backend, database, and Nginx reverse proxy                                                                | Eve                    |
+| Custom design system     | Reusable components for Buttons, Input fields, to establish a consistent style                                                                        | Jukka, Eve, Jyri       |
 
 ## Modules
 
-This project implements **14 points** worth of modules. **Major** modules are worth 2 points each, and **Minor** modules 1 point each.
+This project implements **15 points** worth of modules. **Major** modules are worth 2 points each, and **Minor** modules 1 point each.
 
 | Tier      | Count  | Points |
 | --------- | ------ | ------ |
 | Major     | 4      | 8      |
-| Minor     | 6      | 6      |
-| **Total** | **10** | **14** |
+| Minor     | 7      | 7      |
+| **Total** | **11** | **15** |
 
 ### Major modules
 
@@ -313,7 +317,7 @@ This project implements **14 points** worth of modules. **Major** modules are wo
 
 - _Justification:_ A design system ensures a consistent look and feel across the app, improves development speed by providing reusable components, and allows for easier maintenance of the UI.
 - _Implementation:_ A folder with reusable UI components, color palette declared in root CSS file and used throughout, different fonts and visual hierarchy through font sizes, and icon images for buttons.
-- _Contributors:_ Jukka, Eve
+- _Contributors:_ Jukka, Eve, Jyri
 
 ## Individual Contributions
 
@@ -373,10 +377,16 @@ This project implements **14 points** worth of modules. **Major** modules are wo
 - Shared components - reusable Input, Button, ResettingForm, and DeleteButton components
 - Account settings - contributed to the user-management page styling and inputs
 - Pre-push githook - the repository's pre-push git hook
+- Github - set up the repository, branch rulesets and project boards
+- Project conventions - established with the rest of the team conventions for working as a group, including coding style and how to conduct PR reviews
 
-**Modules:** Advanced search, the public API. contributed to WCAG accessibility compliance, File upload & management, and Support for two additional browsers.
+**Modules:** Advanced search, the public API. contributed to WCAG accessibility compliance, File upload & management, Custom design system, and Support for two additional browsers.
 
-**Challenges faced:** _To be added by the team._
+**Challenges faced:**
+
+- Typescript and React, namely understanding how the hooks works, when the components run
+- Learning about screenreaders and aria tags
+- Getting the big picture of a stack of different technologies
 
 ### Luka Taalas ([Omppu0](https://github.com/Omppu0))
 
