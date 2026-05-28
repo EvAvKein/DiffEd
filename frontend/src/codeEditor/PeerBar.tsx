@@ -37,8 +37,9 @@ export default function PeerBar({peers, readyPeerIds, selectedPeerId, onSelect}:
 								aria-selected={selected}
 								disabled={!ready}
 								onClick={() => onSelect(peer.id)}
-								className={`text-foreground-light px-2 py-1 border ${borderClass} ${stateClass}`}
+								className={`flex items-center gap-2 text-foreground-light px-2 py-1 border ${borderClass} ${stateClass}`}
 							>
+								<img src={`/api/user/${peer.id}/avatar`} alt="" className="w-5 h-5 rounded-full object-cover" />
 								{peer.username}
 							</button>
 						);

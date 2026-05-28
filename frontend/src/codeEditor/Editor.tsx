@@ -72,6 +72,7 @@ export default function Editor({connection, myOwnerId, initialMembers, onRepickF
 				connection,
 				myOwnerId,
 				initialMembers,
+				showToast,
 				(m) => setMembers(m),
 				(ownerId) => setReadyPeerIds((prev) => new Set([...prev, ownerId])),
 			),
@@ -267,7 +268,7 @@ export default function Editor({connection, myOwnerId, initialMembers, onRepickF
 				selectedPeerId={selectedPeerId}
 				onSelect={setSelectedPeerId}
 			/>
-			<div className="flex items-center justify-between p-1">
+			<div className="flex flex-wrap items-center justify-between p-1">
 				<ResettingForm initialValue={fileName} onSubmit={handleRename} inputLabel="Filename" buttonLabel="Rename" />
 				<div className="flex items-center">
 					<label className="text-sm">

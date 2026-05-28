@@ -1,6 +1,7 @@
 import {ChangeSet, Text} from "@codemirror/state";
 import type {WorkspaceMember} from "#shared/src/types";
 import {CollabConnection, getInitialDocument, pullUpdates} from "./collabClient";
+import {useShowToast} from "#/src/stores/toastStore";
 import {delay} from "../utils";
 
 export type PeerDoc = {
@@ -22,6 +23,7 @@ export class CollabPeersPool {
 	private connection: CollabConnection;
 	private myOwnerId: number;
 	private peers = new Map<number, PeerState>();
+	private showToast: ReturnType<typeof useShowToast>;
 	private onMembersChange: (members: WorkspaceMember[]) => void;
 	private onPeerReady: (ownerId: number, doc: PeerDoc) => void;
 	private peerUpdateListener: ((ownerId: number, doc: PeerDoc, changes: ChangeSet) => void) | null = null;
@@ -31,17 +33,22 @@ export class CollabPeersPool {
 		connection: CollabConnection,
 		myOwnerId: number,
 		initialMembers: WorkspaceMember[],
+		showToast: ReturnType<typeof useShowToast>,
 		onMembersChange: (members: WorkspaceMember[]) => void,
 		onPeerReady: (ownerId: number, doc: PeerDoc) => void,
 	) {
 		this.connection = connection;
 		this.myOwnerId = myOwnerId;
+		this.showToast = showToast;
 		this.onMembersChange = onMembersChange;
 		this.onPeerReady = onPeerReady;
-		this.updatePeersList(initialMembers.filter((m) => m.id !== myOwnerId));
+		this.updatePeersList(
+			initialMembers.filter((m) => m.id !== myOwnerId),
+			false,
+		);
 		this.unsubscribeMembers = connection.subscribeMembers((event) => {
 			const members = event.members.filter((m) => m.id !== this.myOwnerId);
-			this.updatePeersList(members);
+			this.updatePeersList(members, true);
 			this.onMembersChange(members);
 		});
 	}
@@ -53,27 +60,29 @@ export class CollabPeersPool {
 		};
 	}
 
-	private updatePeersList(peers: WorkspaceMember[]): void {
+	private updatePeersList(peers: WorkspaceMember[], notify: boolean): void {
 		const peerIds = new Set(peers.map((peer) => peer.id));
 		for (const id of [...this.peers.keys()]) {
-			if (!peerIds.has(id)) this.removePeer(id);
+			if (!peerIds.has(id)) this.removePeer(id, notify);
 		}
 		for (const peer of peers) {
-			if (!this.peers.has(peer.id)) this.addPeer(peer);
+			if (!this.peers.has(peer.id)) this.addPeer(peer, notify);
 		}
 	}
 
-	private addPeer(peer: WorkspaceMember): void {
+	private addPeer(peer: WorkspaceMember, notify: boolean): void {
 		if (this.peers.has(peer.id)) return;
 		const state: PeerState = {member: peer, doc: undefined, aborted: false};
 		this.peers.set(peer.id, state);
+		if (notify) this.showToast("info", `${peer.username} has joined`);
 		this.runPeer(peer.id, state);
 	}
 
-	private removePeer(id: number): void {
+	private removePeer(id: number, notify: boolean): void {
 		const state = this.peers.get(id);
 		if (!state) return;
 		state.aborted = true;
+		if (notify) this.showToast("info", `${state.member.username} has left`);
 		this.peers.delete(id);
 	}
 

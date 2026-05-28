@@ -162,4 +162,33 @@ function getUserAvatar(app: Express) {
 	});
 }
 
-export default {updateUserAvatar, deleteUserAvatar, getUserAvatar};
+function getUserAvatarById(app: Express) {
+	app.get("/api/user/:id/avatar", requireAuthOrApiKey, async (req: AuthRequest, res: Response) => {
+		timestampedLog(`REQUEST >>> ${req.method} ${req.url}`);
+
+		const userId = Number(req.params.id);
+		if (!Number.isInteger(userId) || userId <= 0) {
+			return res.status(400).json({ok: false, error: "Invalid user id"});
+		}
+		try {
+			const filename = await userQueryService.getAvatarFilenameById(userId);
+			const filepath =
+				!filename || filename === DEFAULT_AVATAR
+					? path.join(AVATAR_DIR, DEFAULT_AVATAR)
+					: path.join(AVATAR_DIR, filename);
+			if (!fs.existsSync(filepath)) {
+				throw new Error("Invalid filepath");
+			}
+			res.status(200).sendFile(filepath);
+		} catch (error: unknown) {
+			if (isDbError(error)) {
+				timestampedLog(`DB ERROR <<< ${error.code}: ${error.detail}`);
+			} else {
+				timestampedLog(`ERROR <<< ${error}`);
+			}
+			return res.status(500).json({ok: false, error: "Internal server error"});
+		}
+	});
+}
+
+export default {updateUserAvatar, deleteUserAvatar, getUserAvatar, getUserAvatarById};

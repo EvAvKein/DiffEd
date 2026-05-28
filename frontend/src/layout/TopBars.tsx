@@ -66,7 +66,13 @@ export function UserTopBar() {
 				<TopBarLink to="/filebrowser">Files</TopBarLink>
 			</div>
 			<div className="flex items-center gap-2">
-				<TopBarLink to="/account">{currentUser ? currentUser.username : "Account"}</TopBarLink>
+				<TopBarLink to="/account" className="flex items-center gap-2">
+					{currentUser && (
+						<>
+							<img src="/api/user/avatar" alt="" className="w-5 h-5 rounded-full object-cover" /> {currentUser.username}
+						</>
+					)}
+				</TopBarLink>
 				<Button type="button" onClick={logout}>
 					Log Out
 				</Button>

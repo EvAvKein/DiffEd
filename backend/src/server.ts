@@ -57,6 +57,7 @@ workspaceEndpoints.getWorkspace(app, collabApi);
 avatarEndpoints.updateUserAvatar(app);
 avatarEndpoints.deleteUserAvatar(app);
 avatarEndpoints.getUserAvatar(app);
+avatarEndpoints.getUserAvatarById(app);
 // Catch-all to serve the frontend, needed for subroutes.
 app.get("/*splat", function (_, response) {
 	response.sendFile(path.join(process.cwd(), "/../frontend/dist/index.html"));

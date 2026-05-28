@@ -520,8 +520,11 @@ function Avatar({hasAvatar}: {hasAvatar: boolean}) {
 	return (
 		<OutlineDiv>
 			<Subheading>Avatar</Subheading>
-			<div className="w-32 h-32 rounded-full overflow-hidden m-2">
-				<img src={avatarURL} alt="avatar" className="w-full h-full object-cover" />
+			<div className="flex items-end gap-3 m-2">
+				<div className="w-32 h-32 rounded-full overflow-hidden">
+					<img src={avatarURL} alt="avatar" className="w-full h-full object-cover" />
+				</div>
+				<img src={avatarURL} alt="" className="w-5 h-5 rounded-full object-cover" />
 			</div>
 			<input type="file" accept="image/*" onChange={handleUpload} ref={fileInputRef} style={{display: "none"}} />
 			<Button disabled={isLoading} onClick={() => fileInputRef.current?.click()}>
