@@ -1,6 +1,7 @@
 import {create} from "zustand";
 
 export type ToastVariant = "error" | "success" | "info";
+export type ShowToast = (variant: ToastVariant, message: string) => void;
 
 type Toast = {
 	id: number;
@@ -11,7 +12,7 @@ type Toast = {
 type ToastStore = {
 	assertiveToasts: Toast[];
 	politeToasts: Toast[];
-	showToast: (variant: ToastVariant, message: string) => void;
+	showToast: ShowToast;
 	dismiss: (variant: ToastVariant, id: number) => void;
 };
 

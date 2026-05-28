@@ -15,6 +15,10 @@ export async function apiFetch<T>(input: RequestInfo, init?: RequestInit): Promi
 		return {ok: false, error: "Network error"};
 	}
 
+	if (res.status === 413) {
+		return {ok: false, error: "File too large"};
+	}
+
 	try {
 		const json = await res.json();
 

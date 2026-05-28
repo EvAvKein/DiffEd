@@ -1,5 +1,5 @@
 import {defaultKeymap, insertTab} from "@codemirror/commands";
-import {type Extension, Text, Compartment} from "@codemirror/state";
+import {type Extension, Text, Compartment, EditorState} from "@codemirror/state";
 import {keymap, EditorView} from "@codemirror/view";
 import {vim} from "@replit/codemirror-vim";
 import {unifiedMergeView} from "@codemirror/merge";
@@ -20,7 +20,18 @@ import {basicSetup} from "codemirror";
 import {HighlightStyle, syntaxHighlighting} from "@codemirror/language";
 import {tags} from "@lezer/highlight";
 import {type CollabConnection} from "./collabClient";
-import {peerExtension} from "./peerExtension";
+import {growsPastLimit, peerExtension} from "./peerExtension";
+import type {ShowToast} from "../stores/toastStore";
+
+// Filters any local edit that would grow the doc past MAX_FILE_SIZE, so the change never appears
+function sizeLimitFilter(showToast: ShowToast): Extension {
+	return EditorState.transactionFilter.of((tr) => {
+		if (!tr.docChanged) return tr;
+		if (!growsPastLimit(tr.newDoc, tr.startState.doc)) return tr;
+		showToast("error", "File too large, edit rejected");
+		return [];
+	});
+}
 
 const langServer = {
 	md: () => markdown({codeLanguages: languages}),
@@ -176,6 +187,7 @@ type EditorConfig = {
 	memberInitialDoc: Text | null;
 	vimBindings: boolean;
 	onVimToggle: () => void;
+	showToast: ShowToast;
 };
 
 export function getEditorExtensions({
@@ -186,6 +198,7 @@ export function getEditorExtensions({
 	memberInitialDoc,
 	vimBindings,
 	onVimToggle,
+	showToast,
 }: EditorConfig): Extension[] {
 	const keybinds = keymap.of([
 		...defaultKeymap,
@@ -200,12 +213,13 @@ export function getEditorExtensions({
 	]);
 
 	const extensions: Extension[] = [
+		sizeLimitFilter(showToast),
 		vimCompartment.of(vimBindings ? vim() : []),
 		basicSetup,
 		syntaxHighlighting(codeHighlight),
 		keybinds,
 		langCompartment.of(langExtension),
-		...peerExtension(version, connection, myOwnerId),
+		...peerExtension(version, connection, myOwnerId, showToast),
 		EditorView.theme(
 			{
 				// Hide mergeControl buttons on chunks that only have additions by self

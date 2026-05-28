@@ -12,7 +12,8 @@ import {useShowToast} from "#/src/stores/toastStore";
 import {useCurrentUser, useSetUser, useUpdateUser} from "#/src/stores/userStore";
 import {apiFetch} from "#/src/utils.js";
 import type {ApiResponse, User} from "#shared/src/types.js";
-import {MAX_AVATAR_SIZE, EMAIL_MAX_LENGTH, validatePassword} from "#shared/src/userValidation.js";
+import {validatePassword, EMAIL_MAX_LENGTH} from "#shared/src/userValidation.js";
+import {MAX_FILE_SIZE} from "#shared/src/fileValidation";
 import Hints from "../components/Hints";
 import PasswordInput from "../components/PasswordInput";
 import useMediaQuery from "./useMediaQuery";
@@ -458,7 +459,7 @@ function Avatar({hasAvatar}: {hasAvatar: boolean}) {
 		const file = e.target.files?.[0];
 		if (!file) return;
 
-		if (file.size > MAX_AVATAR_SIZE) {
+		if (file.size > MAX_FILE_SIZE) {
 			showToast("error", "Avatar must be under 1 MB");
 			if (fileInputRef.current) fileInputRef.current.value = "";
 			return;

@@ -26,6 +26,15 @@ type PendingRequest = {
 export type MembersHandler = (event: MembersChangedEvent) => void;
 export type EditorInvalidatedHandler = (event: EditorInvalidatedEvent) => void;
 
+export class CollabRejectedError extends Error {
+	status: number;
+	constructor(status: number, message: string) {
+		super(message);
+		this.status = status;
+		this.name = "CollabRejectedError";
+	}
+}
+
 /** Wrapper for socket.io connection to communicate with our collab server */
 export class CollabConnection {
 	private socket: Socket | null = null;
@@ -65,7 +74,12 @@ export class CollabConnection {
 				clearTimeout(pending.timeoutId);
 				const {result} = data;
 				if (typeof result === "object" && result !== null && "error" in result) {
-					pending.reject(new Error((result as ErrorResponse).error));
+					const err = result as ErrorResponse;
+					if (typeof err.status === "number") {
+						pending.reject(new CollabRejectedError(err.status, err.error));
+					} else {
+						pending.reject(new Error(err.error));
+					}
 				} else {
 					pending.resolve(result);
 				}

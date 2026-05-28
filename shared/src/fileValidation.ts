@@ -1,7 +1,7 @@
-const MAX_FILE_SIZE = 1000000; // 1meg
 const TYPE_BLACK_LIST = ["image/", "video/", "audio/", "font/"];
 const NAME_CHAR_BLACKLIST = ["\0"];
 export const MAX_FILENAME_LEN = 100;
+export const MAX_FILE_SIZE = 1000000;
 
 export function validateFileNameLen(fileName: string): string | null {
 	if (fileName.trim().length === 0) {
@@ -24,7 +24,7 @@ export function validateFile(fileType: string, size?: number, buffer?: string, f
 	}
 
 	if (size !== undefined && size > MAX_FILE_SIZE) {
-		return `File too large at ${size} (max. ${MAX_FILE_SIZE})`;
+		return "File too large";
 	}
 
 	if (fileType && TYPE_BLACK_LIST.some((prefix) => fileType.startsWith(prefix))) {

@@ -5,6 +5,7 @@ import type {Pool} from "pg";
 import type {Request, Response, NextFunction} from "express";
 import {timestampedLog} from "../logging.js";
 import sessionConfig from "../sessionConfig.js";
+import {MAX_FILE_SIZE} from "#shared/src/fileValidation.js";
 import type {
 	User,
 	UserFile,
@@ -504,10 +505,22 @@ export function initCollabSocket(sockets: Server, db: Pool): CollabSocketApi {
 							received = rebaseUpdates(received, doc.updates.slice(data.version));
 						}
 
+						let newDoc = doc.doc;
+						for (const update of received) {
+							newDoc = update.changes.apply(newDoc);
+						}
+						const newByteLen = Buffer.byteLength(newDoc.toString(), "utf8");
+						const oldByteLen = Buffer.byteLength(doc.doc.toString(), "utf8");
+						// Allows shrinking edits even when already over limit, so users aren't locked out of oversized docs
+						if (newByteLen > MAX_FILE_SIZE && newByteLen > oldByteLen) {
+							sendResponse({error: "File too large", status: 413} satisfies ErrorResponse);
+							break;
+						}
+
 						for (const update of received) {
 							doc.updates.push(update);
-							doc.doc = update.changes.apply(doc.doc);
 						}
+						doc.doc = newDoc;
 
 						sendResponse(true);
 						scheduleFlush(doc);

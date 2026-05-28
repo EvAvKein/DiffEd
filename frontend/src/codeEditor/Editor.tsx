@@ -192,6 +192,7 @@ export default function Editor({
 						memberInitialDoc,
 						vimBindings,
 						onVimToggle: handleVimToggle,
+						showToast,
 					}),
 				});
 				const editorView = new EditorView({

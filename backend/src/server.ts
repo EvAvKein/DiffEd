@@ -16,13 +16,14 @@ import OAuthEndpoints from "./endpoints/oauth.js";
 import workspaceEndpoints from "./endpoints/workspace.js";
 import avatarEndpoints from "./endpoints/avatars.js";
 import "./passportConfig.js";
+import {MAX_FILE_SIZE} from "#shared/src/fileValidation.js";
 
 import {initCollabSocket} from "./endpoints/collabSocket.js";
 
 const app = express();
 app.set("trust proxy", 1); // Required so Express reads the Host header forwarded by Nginx, needed for passport-oauth2 relative callbackURL resolution
 const server = createServer(app);
-const sockets = new Server(server, {cors: {origin: "*"}});
+const sockets = new Server(server, {cors: {origin: "*"}, maxHttpBufferSize: MAX_FILE_SIZE * 2}); // Doubles MAX_FILE_SIZE so payloads near the file-size limit still fit after JSON envelope and string-escape overhead
 const collabApi = initCollabSocket(sockets, postgres);
 
 app.use(sessionConfig);

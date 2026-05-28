@@ -25,6 +25,7 @@ export type SigningUser = Pick<User, "username" | "email"> & {
 
 export type ErrorResponse = {
 	error: string;
+	status?: number;
 };
 
 export type SerializedUpdate = {
