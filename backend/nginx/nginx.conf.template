@@ -28,24 +28,30 @@ http {
     ssl_protocols TLSv1.2 TLSv1.3; # 1.2 is still needed for some clients
     ssl_certificate /etc/nginx/ssl/public_certificate.crt;
     ssl_certificate_key /etc/nginx/ssl/private.key;
-	  ssl_ciphers         HIGH:!aNULL:!MD5; # Be a bit stricter about ciphers
-	  ssl_session_cache   shared:SSL:10m; # Cache TLS handshakes for performance
-	  ssl_session_timeout 10m;
+    ssl_ciphers         HIGH:!aNULL:!MD5; # Be a bit stricter about ciphers
+    ssl_session_cache   shared:SSL:10m; # Cache TLS handshakes for performance
+    ssl_session_timeout 10m;
 
-	  error_page 413 @body_too_large;
-	  location @body_too_large {
-	    default_type application/json;
-	    return 413 '{"ok":false,"error":"File too large"}';
-	  }
+    error_page 413 @body_too_large;
+    location @body_too_large {
+      default_type application/json;
+      return 413 '{"ok":false,"error":"File too large"}';
+    }
 
-	  location /api/ {
-	    limit_req zone=api burst=20 nodelay;
-	    limit_req_status 429;
-	    proxy_pass http://backend/api/;
-	    proxy_set_header Host $http_host;
-  	  proxy_set_header X-Forwarded-Proto $scheme;
-	    proxy_set_header X-Forwarded-For $remote_addr;
-	  }
+    error_page 429 @too_many_requests;
+    location @too_many_requests {
+      default_type application/json;
+      return 429 '{"ok":false,"error":"Too many requests"}';
+    }
+
+    location /api/ {
+      limit_req zone=api burst=20 nodelay;
+      limit_req_status 429;
+      proxy_pass http://backend/api/;
+      proxy_set_header Host $http_host;
+      proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_set_header X-Forwarded-For $remote_addr;
+    }
 
     location /socket.io/ {
 	  limit_req zone=ws burst=10 nodelay;
@@ -61,22 +67,22 @@ http {
       proxy_set_header Host $host;
       # Lets Express (with `trust proxy`) know the original scheme so passport-oauth2 builds https:// callbackURLs
       proxy_set_header X-Forwarded-Proto $scheme;
-	    # Preserve the original IP of the client, two different conventions covered
-	    proxy_set_header X-Real-IP $remote_addr;
-	    proxy_set_header X-Forwarded-For $remote_addr;
+      # Preserve the original IP of the client, two different conventions covered
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $remote_addr;
     }
 
     location / {
-	    limit_req zone=general burst=50 nodelay;
-	    limit_req_status 429;
+      limit_req zone=general burst=50 nodelay;
+      limit_req_status 429;
       proxy_pass http://backend/;
       # Forwards the client-facing host+port so passport-oauth2 can resolve relative callbackURLs correctly
       proxy_set_header Host $http_host;
       # Required so passport-oauth2's callbackURL is built as https:// (Express reads this via `trust proxy`). Without this, OAuth either fails or round-trips through an http 301 -> https
       proxy_set_header X-Forwarded-Proto $scheme;
-	    # Preserve the original IP of the client, two different conventions covered
-	    proxy_set_header X-Real-IP $remote_addr;
-	    proxy_set_header X-Forwarded-For $remote_addr;
+      # Preserve the original IP of the client, two different conventions covered
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $remote_addr;
     }
   }
 
