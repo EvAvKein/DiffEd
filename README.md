@@ -357,7 +357,7 @@ This project implements **15 points** worth of modules. **Major** modules are wo
 - Database query separation - extracting database queries into dedicated query-service modules
 - API documentation - drafted core structure of the API reference page
 
-**Modules:** Public API. Contributed to Support for two additional browsers and File upload & management.
+**Modules:** Both frontend and backend frameworks, Public API. Contributed to Support for two additional browsers and File upload & management.
 
 **Challenges faced:**
 
@@ -379,7 +379,7 @@ This project implements **15 points** worth of modules. **Major** modules are wo
 - Github - set up the repository, branch rule sets and project boards
 - Project conventions - established with the rest of the team conventions for working as a group, including coding style and how to conduct PR reviews
 
-**Modules:** Advanced search, the public API. contributed to WCAG accessibility compliance, File upload & management, Custom design system, and Support for two additional browsers.
+**Modules:** Both frontend and backend frameworks, Advanced search, the public API. contributed to WCAG accessibility compliance, File upload & management, Custom design system, and Support for two additional browsers.
 
 **Challenges faced:**
 
@@ -391,15 +391,22 @@ This project implements **15 points** worth of modules. **Major** modules are wo
 
 **Contributions**
 
-- Backend file management - the file upload (Multer), retrieval, and delete endpoints
-- Backend file validation - file-type and size capping on uploads
+- Backend file management - the file upload, retrieval, and delete endpoints, file query service
+- Backend and frontend file validation - file-type and size validation on uploads
 - Multi-call uploads - handling file uploads as multiple independent requests
-- File list optimization - trimming the file endpoints to return only the data the list needs, with a partial file type
-- Upload UX - appending and removing files in the upload list, and error handling on failed uploads
+- Upload UX - file uploading frontend functionality, error handling on failed uploads etc...
+- File list optimization - trimming the file endpoints, making the backend only return the necessary data
+- Nginx custom return types - return api compliant json on request size and rate limiting
 - Public API - contributed to the public file endpoints
+- Project architecture - Brainstorming and refining architectural and implementation details with the team
 
-**Modules:** File upload & management, the Public API. Contributed to support for two additional browsers.
+**Modules:** Both frontend and backend frameworks, File upload & management, the Public API. Contributed to support for two additional browsers.
 
-**Challenges faced:** _To be added by the team._
+**Challenges faced:**
+
+- Waiting for long and seemingly fragile builds
+- Typescript and React unintuitive behaviours
+- Getting more comfortable with non linear program flow caused by async hooks and timers
+- Having to accept and work with complexity that feels unnecessary
 
 _All team members also contributed to code reviews and to developer responsibilities across the codebase._
