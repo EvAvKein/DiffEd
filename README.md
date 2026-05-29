@@ -137,7 +137,7 @@ All AI code was thoroughly reviewed and tested before being merged.
 
 **Work organization**
 
-The team works in 2-week sprints, aiming towards code-named release-based version milestones (e.g. Cherry, Pineapple, Cactus). Each version added a defined scope of features agreed on upfront, and the team checks in regularly (remotely and in person) to track progress and resolve blockers.
+The team works in 2-week sprints, aiming towards code-named release-based version milestones (e.g. Cherry, Pineapple, Cactus). Each version added a defined scope of features agreed on upfront, and the team checks in regularly (remotely and in person) to track progress and resolve blockers. On a day-to-day basis, issues are created on a kanban board and team members pick up tasks from the backlog, moving them across the board as they progress until a PR is opened for review and merge.
 
 **Tools**
 
