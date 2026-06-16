@@ -1,7 +1,6 @@
 import {useState, useEffect, useRef} from "react";
 import {useNavigate} from "react-router";
 import Footer from "#/src/layout/Footer";
-import {z} from "zod";
 import Button from "#/src/components/Button";
 import Input from "#/src/components/Input";
 import Subheading from "../components/Subheading";
@@ -12,13 +11,18 @@ import {useShowToast} from "#/src/stores/toastStore";
 import {useCurrentUser, useSetUser, useUpdateUser} from "#/src/stores/userStore";
 import {apiFetch} from "#/src/utils.js";
 import type {ApiResponse, User} from "#shared/src/types.js";
-import {validatePassword, EMAIL_MAX_LENGTH} from "#shared/src/userValidation.js";
+import {
+	validatePassword,
+	EMAIL_MAX_LENGTH,
+	PASSWORD_MAX_LENGTH,
+	USERNAME_MIN_LENGTH,
+	USERNAME_MAX_LENGTH,
+} from "#shared/src/userValidation.js";
+import {usernameSchema, emailSchema} from "#shared/src/schemas.js";
 import {MAX_FILE_SIZE} from "#shared/src/fileValidation";
 import Hints from "../components/Hints";
 import PasswordInput from "../components/PasswordInput";
 import useMediaQuery from "./useMediaQuery";
-
-const emailSchema = z.email();
 
 type UserSettingProps = {
 	user: User;
@@ -39,11 +43,13 @@ function UserSettings({user, onUpdate}: UserSettingProps) {
 		const errors: string[] = [];
 
 		if (newUsername) {
-			if (newUsername.length < 3) errors.push("Username has to be at least 3 characters long");
+			const usernameResult = usernameSchema.safeParse(newUsername);
+			if (!usernameResult.success) errors.push(usernameResult.error.issues[0].message);
 			if (newUsername === user.username) errors.push("New Username same as current username");
 		}
 		if (newEmail) {
-			if (!emailSchema.safeParse(newEmail).success) errors.push("Invalid email");
+			const emailResult = emailSchema.safeParse(newEmail);
+			if (!emailResult.success) errors.push(emailResult.error.issues[0].message);
 			if (newEmail === user.email) errors.push("New email same as current email");
 		}
 
@@ -109,11 +115,15 @@ function UserSettings({user, onUpdate}: UserSettingProps) {
 		<>
 			<div className="flex flex-col justify-center items-center">
 				<label htmlFor="username-input">Username</label>
-				<Hints id="username-hints" hints={["Minimum length 3", "Maximum length 20"]} />
+				<Hints
+					id="username-hints"
+					hints={[`Minimum length ${USERNAME_MIN_LENGTH}`, `Maximum length ${USERNAME_MAX_LENGTH}`]}
+				/>
 				<Input
 					id="username-input"
 					type="text"
 					placeholder={user.username}
+					maxLength={USERNAME_MAX_LENGTH}
 					value={newUsername}
 					onChange={(e) => setNewUsername(e.target.value)}
 				/>
@@ -196,18 +206,21 @@ function Password() {
 						label="New password"
 						showHints={true}
 						id="new-password"
+						maxLength={PASSWORD_MAX_LENGTH}
 						value={newPassword}
 						onChange={(e) => setNewPassword(e.target.value)}
 					/>
 					<PasswordInput
 						label="Repeat new password"
 						id="new-password-again"
+						maxLength={PASSWORD_MAX_LENGTH}
 						value={newPassword2}
 						onChange={(e) => setNewPassword2(e.target.value)}
 					/>
 					<PasswordInput
 						label="Old password"
 						id="old-password"
+						maxLength={PASSWORD_MAX_LENGTH}
 						value={oldPassword}
 						onChange={(e) => setOldPassword(e.target.value)}
 					/>

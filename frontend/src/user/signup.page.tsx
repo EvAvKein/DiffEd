@@ -6,15 +6,19 @@ import type {Location} from "react-router";
 import type {SubmitEvent} from "react";
 import type {SigningUser, ApiResponse, User, PendingGithubPayload} from "#shared/src/types";
 import {apiFetch, getSession} from "#/src/utils.ts";
-import {z} from "zod";
-import {validatePassword, EMAIL_MAX_LENGTH} from "#shared/src/userValidation.js";
+import {
+	validatePassword,
+	EMAIL_MAX_LENGTH,
+	PASSWORD_MAX_LENGTH,
+	USERNAME_MIN_LENGTH,
+	USERNAME_MAX_LENGTH,
+} from "#shared/src/userValidation.js";
+import {emailSchema, usernameSchema} from "#shared/src/schemas.js";
 import {useShowToast} from "#/src/stores/toastStore";
 import {useSetUser} from "#/src/stores/userStore.ts";
 import Hints from "../components/Hints";
 import PasswordInput from "../components/PasswordInput";
 import Subheading from "../components/Subheading";
-
-const emailSchema = z.email();
 
 function decodeGithubToken(token: string): PendingGithubPayload | null {
 	try {
@@ -62,9 +66,14 @@ export default function SignupPage() {
 				throw new Error("Please fill all the fields!");
 			}
 
-			const result = emailSchema.safeParse(email);
-			if (!result.success) {
-				throw new Error("Invalid email");
+			const usernameResult = usernameSchema.safeParse(username);
+			if (!usernameResult.success) {
+				throw new Error(usernameResult.error.issues[0].message);
+			}
+
+			const emailResult = emailSchema.safeParse(email);
+			if (!emailResult.success) {
+				throw new Error(emailResult.error.issues[0].message);
 			}
 
 			const passwordError = validatePassword(password);
@@ -106,6 +115,9 @@ export default function SignupPage() {
 		try {
 			if (!username) throw new Error("Please enter a username");
 
+			const usernameResult = usernameSchema.safeParse(username);
+			if (!usernameResult.success) throw new Error(usernameResult.error.issues[0].message);
+
 			const response: ApiResponse<User> = await apiFetch("/api/auth/github/username", {
 				method: "POST",
 				headers: {"Content-Type": "application/json"},
@@ -128,9 +140,11 @@ export default function SignupPage() {
 			<div className="min-h-[calc(100vh-105px)] flex flex-col items-center pt-12 gap-2">
 				<Subheading className={"text-3xl! font-bold"}>Complete your GitHub sign-up</Subheading>
 				<form className="flex flex-col items-center" onSubmit={completeGithubSignup}>
+					<Hints hints={[`Minimum length ${USERNAME_MIN_LENGTH}`, `Maximum length ${USERNAME_MAX_LENGTH}`]} />
 					<Input
 						className="block"
 						placeholder="username"
+						maxLength={USERNAME_MAX_LENGTH}
 						value={username}
 						onChange={(e) => setUserName(e.target.value)}
 					/>
@@ -145,10 +159,14 @@ export default function SignupPage() {
 			<Subheading className={"text-3xl! font-bold"}>Create a new account</Subheading>
 			<form onSubmit={signup} className="flex flex-col items-center justify-center">
 				<label htmlFor="username-input">Username</label>
-				<Hints id="username-hints" hints={["Minimum length 3", "Maximum length 20"]} />
+				<Hints
+					id="username-hints"
+					hints={[`Minimum length ${USERNAME_MIN_LENGTH}`, `Maximum length ${USERNAME_MAX_LENGTH}`]}
+				/>
 				<Input
 					id="username-input"
 					placeholder="username"
+					maxLength={USERNAME_MAX_LENGTH}
 					value={username}
 					onChange={(e) => setUserName(e.target.value)}
 				/>
@@ -162,9 +180,19 @@ export default function SignupPage() {
 					onChange={(e) => setUserEmail(e.target.value)}
 				/>
 
-				<PasswordInput showHints={true} value={password} onChange={(e) => setUserPassword(e.target.value)} />
+				<PasswordInput
+					showHints={true}
+					maxLength={PASSWORD_MAX_LENGTH}
+					value={password}
+					onChange={(e) => setUserPassword(e.target.value)}
+				/>
 
-				<PasswordInput label="Repeat password" value={password2} onChange={(e) => setUserPassword2(e.target.value)} />
+				<PasswordInput
+					label="Repeat password"
+					maxLength={PASSWORD_MAX_LENGTH}
+					value={password2}
+					onChange={(e) => setUserPassword2(e.target.value)}
+				/>
 
 				<Button type="submit">Sign Up</Button>
 			</form>

@@ -9,6 +9,7 @@ import {getSession, apiFetch} from "#/src/utils.ts";
 import {useShowToast} from "#/src/stores/toastStore";
 import {useSetUser} from "#/src/stores/userStore.ts";
 import type {ApiResponse, User} from "#shared/src/types.js";
+import {EMAIL_MAX_LENGTH, PASSWORD_MAX_LENGTH} from "#shared/src/userValidation.js";
 import Subheading from "../components/Subheading";
 
 export default function LoginPage() {
@@ -41,6 +42,10 @@ export default function LoginPage() {
 			return showToast("error", "Please fill all the fields.");
 		}
 
+		if (loginIdentifier.length > EMAIL_MAX_LENGTH) {
+			return showToast("error", `Identifier cannot exceed ${EMAIL_MAX_LENGTH} characters`);
+		}
+
 		try {
 			const response: ApiResponse<User> = await apiFetch("/api/session", {
 				method: "POST",
@@ -71,11 +76,17 @@ export default function LoginPage() {
 				<Input
 					id="login"
 					placeholder="username or email"
+					maxLength={EMAIL_MAX_LENGTH}
 					value={loginIdentifier}
 					onChange={(e) => setLoginIdentifier(e.target.value)}
 					autoFocus={true}
 				/>
-				<PasswordInput id="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} />
+				<PasswordInput
+					id="password"
+					maxLength={PASSWORD_MAX_LENGTH}
+					value={loginPassword}
+					onChange={(e) => setLoginPassword(e.target.value)}
+				/>
 				<Button
 					type="submit"
 					className="col-span-2 mx-auto"
