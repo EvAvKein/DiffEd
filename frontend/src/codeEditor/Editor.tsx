@@ -263,6 +263,7 @@ export default function Editor({
 		try {
 			const response = await pushFileName(connection, name);
 			setFileName(response.name);
+			showToast("success", `File renamed to "${response.name}"`);
 		} catch (err) {
 			showToast("error", errorMessage(err));
 		}
