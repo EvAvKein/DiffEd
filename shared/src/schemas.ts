@@ -1,4 +1,4 @@
-import { z } from "zod";
+import {z} from "zod";
 import {
 	PASSWORD_MIN_LENGTH,
 	PASSWORD_MAX_LENGTH,
@@ -18,4 +18,6 @@ export const usernameSchema = z
 	.max(USERNAME_MAX_LENGTH, `Username cannot exceed ${USERNAME_MAX_LENGTH} characters`)
 	.regex(/^[a-zA-Z0-9_]+$/, "Username must contain only letters, numbers, or underscores");
 
-export const emailSchema = z.email("Email must be a valid email address").max(EMAIL_MAX_LENGTH, `Email cannot exceed ${EMAIL_MAX_LENGTH} characters`);
+export const emailSchema = z
+	.email("Email must be a valid email address")
+	.max(EMAIL_MAX_LENGTH, `Email cannot exceed ${EMAIL_MAX_LENGTH} characters`);
