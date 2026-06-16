@@ -85,9 +85,7 @@ export default function LoginPage() {
 				</Button>
 			</form>
 
-			<a href="/api/auth/github">
-				<Button type="button">Login with GitHub</Button>
-			</a>
+			<Button href="/api/auth/github">Login with GitHub</Button>
 
 			<div className="flex flex-col items-center">
 				<p className="text-sm">Don't have an account?</p>
