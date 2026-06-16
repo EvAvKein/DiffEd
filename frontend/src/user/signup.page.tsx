@@ -168,9 +168,7 @@ export default function SignupPage() {
 
 				<Button type="submit">Sign Up</Button>
 			</form>
-			<a href="/api/auth/github?action=signup">
-				<Button type="button">Sign up with GitHub</Button>
-			</a>
+			<Button href="/api/auth/github?action=signup">Sign up with GitHub</Button>
 			<div>
 				Already have an account? Go to the&nbsp;
 				<button
