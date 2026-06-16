@@ -10,8 +10,8 @@ export default function HomePage() {
 		<>
 			<style>{`
 				@keyframes title-pulse {
-					0%, 100% { text-shadow: 0 0 24px color-mix(in srgb, var(--color-accent) 25%, transparent); }
-					50%       { text-shadow: 0 0 60px color-mix(in srgb, var(--color-accent) 55%, transparent), 0 0 100px color-mix(in srgb, var(--color-accent) 15%, transparent); }
+					0%, 100% { text-shadow: 0 0 16px color-mix(in srgb, var(--color-accent) 20%, transparent); }
+					50%       { text-shadow: 0 0 40px color-mix(in srgb, var(--color-accent) 45%, transparent); }
 				}
 				@keyframes rise {
 					from { opacity: 0; transform: translateY(18px); }
