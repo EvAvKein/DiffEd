@@ -5,7 +5,7 @@ services:
     build:
       dockerfile: ./backend/dockerfile.dev
     volumes:
-      - ./shared:/shared
+      - ./shared/src:/shared/src
       - ./backend/src:/backend/src
       - ./backend/sql:/backend/sql
     environment:
@@ -17,7 +17,7 @@ services:
     build:
       dockerfile: ./frontend/dockerfile.dev
     volumes:
-      - ./shared:/shared
+      - ./shared/src:/shared/src
       - ./docs:/docs
       - ./frontend/src:/frontend/src
 
